@@ -44,9 +44,10 @@ playwright-report/
 playwright-results.json
 
 # Workflow
-.env          # ← Never commit secrets
+.env
 .env.local
 .env.*.local
-.workflow/    # ← Workflow state files (regenerated on each run)
+.workflow/
 
 enhancements/
+enhacements/

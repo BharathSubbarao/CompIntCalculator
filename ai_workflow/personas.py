@@ -76,31 +76,50 @@ def developer_create_branch_and_plan(issue_number: int) -> dict[str, Any]:
         else:
             print(f"[INFO] Checked out existing branch: {branch}")
         
-        # Stage any uncommitted changes and commit them
-        # This ensures the branch has commits different from main
+        # Stage all changes first, then unstage generated artifacts.
+        # This keeps workflow/runtime files out of automated PR commits.
         subprocess.run(
             ["git", "add", "-A"],
             capture_output=True,
             text=True,
         )
-        
-        # Check if there are staged changes
-        status_result = subprocess.run(
-            ["git", "status", "--porcelain"],
+
+        subprocess.run(
+            [
+                "git",
+                "reset",
+                "HEAD",
+                "--",
+                ".workflow",
+                "playwright-report",
+                "playwright-results.json",
+                "test-results.log",
+                ".env",
+                ".env.local",
+            ],
             capture_output=True,
             text=True,
         )
-        
-        if status_result.stdout.strip():
+
+        # Commit only when there are staged changes.
+        staged_changes = subprocess.run(
+            ["git", "diff", "--cached", "--name-only"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        if staged_changes.stdout.strip():
             # There are changes, commit them
             subprocess.run(
                 ["git", "commit", "-m", f"[Issue #{issue_number}] Implementation for issue"],
                 capture_output=True,
                 text=True,
+                check=True,
             )
             print(f"[INFO] Committed changes to branch: {branch}")
         else:
-            print(f"[INFO] No changes to commit on branch: {branch}")
+            print(f"[INFO] No staged changes to commit on branch: {branch}")
         
         return {"branch": branch, "planned": True}
     except subprocess.CalledProcessError as e:
