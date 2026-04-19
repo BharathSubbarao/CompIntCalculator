@@ -166,6 +166,28 @@ def pr_create(issue_number: int) -> dict[str, Any]:
             timeout=60,
         )
 
+        # If PR already exists for this branch, return it instead of failing.
+        existing_pr = subprocess.run(
+            [
+                "gh",
+                "pr",
+                "list",
+                "--state",
+                "open",
+                "--head",
+                current_branch,
+                "--json",
+                "url",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        if "https://" in existing_pr.stdout:
+            pr_url = existing_pr.stdout.split('"url":"', 1)[1].split('"', 1)[0]
+            print(f"[INFO] PR already exists: {pr_url}")
+            return {"pr_created": True, "pr_url": pr_url, "existing": True}
+
         title = f"Issue #{issue_number}: Automated implementation"
         body = (
             f"Closes #{issue_number}\n\n"
@@ -173,7 +195,19 @@ def pr_create(issue_number: int) -> dict[str, Any]:
             "All unit and UI tests passing. Ready for human review."
         )
         result = subprocess.run(
-            ["gh", "pr", "create", "--title", title, "--body", body],
+            [
+                "gh",
+                "pr",
+                "create",
+                "--base",
+                "main",
+                "--head",
+                current_branch,
+                "--title",
+                title,
+                "--body",
+                body,
+            ],
             capture_output=True,
             text=True,
             check=True,
