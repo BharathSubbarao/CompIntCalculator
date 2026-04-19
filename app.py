@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from math import floor, isclose
 
+import numpy  # noqa: F401
+import pandas  # noqa: F401
 import plotly.graph_objects as go
 import streamlit as st
 

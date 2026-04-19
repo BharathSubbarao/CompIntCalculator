@@ -1,5 +1,7 @@
 streamlit
 plotly
+numpy
+pandas
 pytest
 fastapi
 uvicorn
