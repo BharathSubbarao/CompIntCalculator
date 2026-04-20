@@ -19,6 +19,8 @@ const allProjects = [
 ];
 
 const projects = allProjects.filter((p) => !skipBrowsers.has(p.name));
+const appPort = process.env.PLAYWRIGHT_APP_PORT || "8501";
+const appUrl = `http://127.0.0.1:${appPort}`;
 
 console.log(`Running tests on: ${projects.map((p) => p.name).join(", ")}`);
 
@@ -36,14 +38,14 @@ export default defineConfig({
     ["json", { outputFile: "playwright-results.json" }],
   ],
   use: {
-    baseURL: "http://127.0.0.1:8501",
+    baseURL: appUrl,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
   projects: projects,
   webServer: {
-    command: "python3 -m streamlit run app.py --server.headless true --server.port 8501 --logger.level=error",
-    url: "http://127.0.0.1:8501",
+    command: `python3 -m streamlit run app.py --server.headless true --server.port ${appPort} --logger.level=error`,
+    url: appUrl,
     reuseExistingServer: false,
     timeout: 120_000,
   },
