@@ -16,6 +16,16 @@ def get_plotly_template() -> str:
     return "plotly_dark" if base_theme == "dark" else "plotly_white"
 
 
+# Frequency mapping: single source of truth for dropdown and calculations
+FREQUENCY_OPTIONS = {
+    "Annually": 1,
+    "Half Yearly": 2,
+    "Quarterly": 4,
+    "Monthly": 12,
+    "Daily": 365,
+}
+
+
 def calculate_compound_balance(
     money_principal: float,
     money_monthly_contribution: float,
@@ -240,16 +250,10 @@ def render_sidebar_inputs() -> tuple[
         time_years = 0.0
         st.session_state["time_years_input"] = 0.0
 
-    frequency_options = {
-        "Annually": 1,
-        "Quarterly": 4,
-        "Monthly": 12,
-        "Daily": 365,
-    }
     frequency_label = st.sidebar.selectbox(
         "Compounding Frequency",
-        options=list(frequency_options.keys()),
-        index=2,
+        options=list(FREQUENCY_OPTIONS.keys()),
+        index=3,
     )
 
     return (
@@ -257,7 +261,7 @@ def render_sidebar_inputs() -> tuple[
         money_monthly_contribution,
         annual_rate_percent,
         time_years,
-        frequency_options[frequency_label],
+        FREQUENCY_OPTIONS[frequency_label],
         frequency_label,
         money_currency_code,
         money_currency_symbol,
