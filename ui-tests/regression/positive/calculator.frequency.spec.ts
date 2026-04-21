@@ -12,7 +12,7 @@ test.describe("UI Regression Positive - Frequency", () => {
   test("all compounding frequencies are selectable", async ({ page }) => {
     await page.goto("/");
 
-    for (const frequency of ["Annually", "Quarterly", "Monthly", "Daily"]) {
+    for (const frequency of ["Annually", "Quarterly", "Monthly", "Weekly", "Daily"]) {
       await selectCompoundingFrequency(page, frequency);
       await expect(
         page.getByText(new RegExp(`Projected using ${frequency.toLowerCase()} compounding`))
