@@ -5,6 +5,7 @@ from uuid import uuid4
 
 from fastapi import FastAPI, HTTPException
 
+from .github_api import IssueNotFoundError, get_issue
 from .models import StartWorkflowRequest
 from .state_store import create_workflow_state, load_state
 from .workflow import run_workflow
@@ -15,6 +16,21 @@ app = FastAPI(title="Issue Workflow Orchestrator")
 @app.post("/workflows/start")
 def start_workflow(req: StartWorkflowRequest) -> dict:
     try:
+        try:
+            issue = get_issue(req.issue_number)
+        except IssueNotFoundError as error:
+            raise HTTPException(status_code=404, detail=str(error)) from error
+
+        issue_state = str(issue.get("state", "")).upper()
+        if issue_state != "OPEN":
+            raise HTTPException(
+                status_code=409,
+                detail=(
+                    f"Issue #{req.issue_number} is {issue_state or 'UNKNOWN'}. "
+                    "Workflow can start only for OPEN issues."
+                ),
+            )
+
         workflow_id = f"issue-{req.issue_number}-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}-{uuid4().hex[:8]}"
         state = create_workflow_state(workflow_id, req.issue_number)
         final_state = run_workflow(state)
@@ -24,6 +40,8 @@ def start_workflow(req: StartWorkflowRequest) -> dict:
             "status": final_state.status,
             "current_step": final_state.current_step,
         }
+    except HTTPException:
+        raise
     except Exception as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
 

@@ -8,6 +8,10 @@ REPO_OWNER = "BharathSubbarao"
 REPO_NAME = "CompIntCalculator"
 
 
+class IssueNotFoundError(RuntimeError):
+    """Raised when the requested GitHub issue does not exist."""
+
+
 def get_issue(issue_number: int) -> dict[str, Any]:
     try:
         result = subprocess.run(
@@ -19,7 +23,7 @@ def get_issue(issue_number: int) -> dict[str, Any]:
                 "--repo",
                 f"{REPO_OWNER}/{REPO_NAME}",
                 "--json",
-                "body,title,number",
+                "body,title,number,state",
             ],
             capture_output=True,
             text=True,
@@ -28,7 +32,11 @@ def get_issue(issue_number: int) -> dict[str, Any]:
         )
         return json.loads(result.stdout)
     except subprocess.CalledProcessError as error:
-        raise RuntimeError(f"Failed to fetch issue: {error.stderr}") from error
+        stderr = (error.stderr or "").strip()
+        stderr_lower = stderr.lower()
+        if "could not resolve to an issue" in stderr_lower or "not found" in stderr_lower:
+            raise IssueNotFoundError(f"Issue #{issue_number} not found") from error
+        raise RuntimeError(f"Failed to fetch issue: {stderr}") from error
     except json.JSONDecodeError as error:
         raise RuntimeError(f"Failed to parse issue data: {error}") from error
 
