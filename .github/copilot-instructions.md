@@ -47,6 +47,41 @@ You are an expert Python developer specializing in clean, mathematical web appli
 - **No Global Variables**: Encapsulate logic within functions.
 - **Currency Variables**: All variable names for currency must start with the prefix 'money_'.
 
+## 🚦 Issue Workflow — Mandatory Implementation Gates
+
+These rules are **blocking requirements** for every automated issue workflow. A workflow MUST NOT proceed to PR creation unless ALL gates pass.
+
+### Gate 1 — Functional Coverage (Developer Step)
+- Read the issue title and body to extract the exact functional requirement.
+- Identify which file(s) in the app must change (e.g., `app.py` for UI features).
+- Make the code change **before** running tests or creating a commit.
+- **BLOCK** if: the issue is a product feature but no `app.py` change has been made.
+- **BLOCK** if: the only changed files are workflow/infra files (`ai_workflow/`, `scripts/`, `workflow_dashboard.py`, `playwright.config.ts`).
+
+### Gate 2 — Unit Test Delta (Unit Tester Step)
+- For every new feature or changed behavior, add or update tests in `tests/test_app.py`.
+- New test names must directly reference the new feature (e.g., `test_weekly_frequency_...`).
+- **BLOCK** if: no new or modified test covers the implemented feature.
+- Run tests with `bash scripts/run_tests_with_log.sh` and assert all pass.
+
+### Gate 3 — UI Regression Test Delta (UI Tester Step)
+- For every new UI option or visible change, add or update Playwright tests in `ui-tests/regression/`.
+- New scenario must verify the new UI element exists and behaves correctly.
+- **BLOCK** if: no Playwright test references the new UI option (e.g., a new dropdown item).
+- Run regression with `bash scripts/run_ui_regression.sh` and assert all pass.
+
+### Gate 4 — Traceability (PR Step)
+- PR body must include a checklist mapping each acceptance criterion to:
+  - the changed file(s)
+  - the unit test(s) added/updated
+  - the Playwright test(s) added/updated
+- **BLOCK** if: acceptance criteria are not fully covered by code and test changes.
+
+### Compounding Frequency Reference
+The `frequency_options` dict in `app.py` is the single source of truth for dropdown values.
+Valid compounds_per_year mappings to maintain consistency:
+- Annually = 1, Quarterly = 4, Monthly = 12, Bi-Weekly = 26, Weekly = 52, Daily = 365
+
 
 ## 🚀 Commands
 - **Install**: `pip3 install streamlit plotly`
