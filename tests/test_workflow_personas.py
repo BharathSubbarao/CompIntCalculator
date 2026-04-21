@@ -30,8 +30,8 @@ def test_developer_step_runs_copilot_and_commits_feature_changes(monkeypatch) ->
             assert "Issue title: Add \"Half Yearly\" compounding frequency" in prompt
             assert "Add or update unit tests in tests/test_app.py" in prompt
             assert "Do not push, open a PR, or create a git commit" in prompt
-            assert "--agent" in args
-            assert "issue-workflow" in args
+            assert "--allow-all" in args
+            assert "--agent" not in args
             return CompletedProcess(args, 0, "changed app.py and tests", "")
         if args[:3] == ["git", "diff", "--cached"]:
             return CompletedProcess(

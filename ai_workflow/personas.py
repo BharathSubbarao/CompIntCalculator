@@ -204,9 +204,7 @@ def developer_create_branch_and_plan(issue_number: int) -> dict[str, Any]:
                 "copilot",
                 "-p",
                 implementation_prompt,
-                "--agent",
-                "issue-workflow",
-                "--allow-all-tools",
+                "--allow-all",
                 "--no-ask-user",
                 "--reasoning-effort",
                 "high",
@@ -248,11 +246,14 @@ def developer_create_branch_and_plan(issue_number: int) -> dict[str, Any]:
 
         staged_files = [f for f in staged_changes.stdout.strip().splitlines() if f]
 
+        implementation_summary = implementation_result.stdout.strip()
+
         # Gate 1 — Functional Coverage
         if not staged_files:
             raise RuntimeError(
                 f"Gate 1 BLOCKED: No staged changes found for issue #{issue_number}. "
-                "The developer must implement the feature in app.py before committing."
+                "The developer must implement the feature in app.py before committing.\n"
+                f"Copilot output:\n{implementation_summary or '[no output]'}"
             )
         if _is_infra_only(staged_files) or not _has_product_change(staged_files):
             raise RuntimeError(
