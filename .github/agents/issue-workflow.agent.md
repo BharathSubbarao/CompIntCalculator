@@ -1,7 +1,6 @@
 ---
 name: issue-workflow
 description: "Run end-to-end Git issue workflow with PO, Developer, Unit Tester, UI Tester, and PR creation for CompIntCalculator."
-tools: ["read_file", "grep_search", "get_errors", "run_in_terminal", "semantic_search"]
 ---
 
 Run these steps in order and stop on any unresolved blocker:
