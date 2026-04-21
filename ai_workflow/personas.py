@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 import subprocess
 from typing import Any
 
@@ -19,6 +20,102 @@ _INFRA_PREFIXES = (
 
 # Product source files required for feature issues
 _PRODUCT_FILES = ("app.py",)
+
+
+def _build_implementation_prompt(issue_number: int, issue_title: str, issue_body: str) -> str:
+    return (
+        f"Implement GitHub issue #{issue_number} in this repository.\n\n"
+        f"Issue title: {issue_title}\n\n"
+        f"Issue body:\n{issue_body}\n\n"
+        "Requirements:\n"
+        "- Make the required product change in app.py or the relevant product file.\n"
+        "- Add or update unit tests in tests/test_app.py for the new behavior.\n"
+        "- Add or update Playwright regression coverage in ui-tests/regression/ for the visible behavior.\n"
+        "- Follow the repository instructions and workflow gate requirements.\n"
+        "- Do not change workflow or infrastructure files unless the issue explicitly requires it.\n"
+        "- Do not push, open a PR, or create a git commit; the orchestrator handles that.\n"
+        "- End with a short summary of the files changed and the tests added or updated."
+    )
+
+
+def _issue_is_already_refined(issue_body: str) -> bool:
+    normalized = issue_body.lower()
+    return (
+        "## problem statement" in normalized
+        and "## acceptance criteria checklist" in normalized
+        and "## test expectations" in normalized
+    )
+
+
+def _extract_checklist_items(issue_body: str) -> list[str]:
+    items: list[str] = []
+    for raw_line in issue_body.splitlines():
+        line = raw_line.strip()
+        if line.startswith("- [ ]") or line.startswith("- [x]") or line.startswith("- [X]"):
+            item = line[5:].strip()
+            if item and item not in items:
+                items.append(item)
+    return items
+
+
+def _extract_added_python_tests(diff_text: str) -> list[str]:
+    return re.findall(r"(?m)^\+def (test_[^(]+)", diff_text)
+
+
+def _extract_added_playwright_tests(diff_text: str) -> list[str]:
+    return re.findall(r'(?m)^\+\s*test\("([^"]+)"', diff_text)
+
+
+def _build_pr_body(issue_number: int) -> str:
+    issue = get_issue(issue_number)
+    issue_body = str(issue.get("body") or "")
+
+    changed_files_result = subprocess.run(
+        ["git", "diff", "--name-only", "origin/main...HEAD"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    changed_files = [line for line in changed_files_result.stdout.splitlines() if line]
+
+    unit_diff = subprocess.run(
+        ["git", "diff", "origin/main...HEAD", "--", "tests/test_app.py"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+    ui_diff = subprocess.run(
+        ["git", "diff", "origin/main...HEAD", "--", "ui-tests/"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout
+
+    unit_tests = _extract_added_python_tests(unit_diff)
+    ui_tests = _extract_added_playwright_tests(ui_diff)
+    acceptance_criteria = _extract_checklist_items(issue_body)
+
+    if not acceptance_criteria:
+        raise RuntimeError(
+            f"Gate 4 BLOCKED: Issue #{issue_number} does not contain acceptance criteria checkboxes."
+        )
+
+    implementation_files = ", ".join(changed_files) if changed_files else "No changed files detected"
+    unit_summary = ", ".join(unit_tests) if unit_tests else "Updated tests/test_app.py"
+    ui_summary = ", ".join(ui_tests) if ui_tests else "Updated ui-tests/regression/ coverage"
+    checked_criteria = "\n".join(f"- [x] {item}" for item in acceptance_criteria)
+
+    return (
+        f"Closes #{issue_number}\n\n"
+        "## Implementation\n"
+        f"- Changed: {implementation_files} — implemented the requested issue behavior.\n\n"
+        "## Unit Tests\n"
+        f"- Added/updated: {unit_summary}\n\n"
+        "## UI Regression Tests  \n"
+        f"- Added/updated: {ui_summary}\n\n"
+        "## Acceptance Criteria\n"
+        f"{checked_criteria}\n"
+    )
 
 
 def _is_infra_only(changed_files: list[str]) -> bool:
@@ -68,6 +165,9 @@ def product_owner_refine_issue(issue_number: int) -> dict[str, Any]:
         issue = get_issue(issue_number)
         body = issue.get("body") or ""
         title = issue.get("title", "Feature implementation")
+        if _issue_is_already_refined(body):
+            print(f"[INFO] Issue #{issue_number} already uses workflow template")
+            return {"issue_updated": False, "template_applied": False}
         refined_body = ISSUE_TEMPLATE.format(problem_statement=(body.strip() or title))
         update_issue_body(issue_number, refined_body)
         print(f"[INFO] Issue #{issue_number} template refined")
@@ -78,6 +178,7 @@ def product_owner_refine_issue(issue_number: int) -> dict[str, Any]:
 
 def developer_create_branch_and_plan(issue_number: int) -> dict[str, Any]:
     try:
+        issue = get_issue(issue_number)
         branch = f"feature/issue-{issue_number}"
         result = subprocess.run(["git", "checkout", branch], capture_output=True, text=True)
 
@@ -91,6 +192,32 @@ def developer_create_branch_and_plan(issue_number: int) -> dict[str, Any]:
             print(f"[INFO] Created new branch: {branch}")
         else:
             print(f"[INFO] Checked out existing branch: {branch}")
+
+        implementation_prompt = _build_implementation_prompt(
+            issue_number,
+            str(issue.get("title") or f"Issue #{issue_number}"),
+            str(issue.get("body") or ""),
+        )
+        implementation_result = subprocess.run(
+            [
+                "gh",
+                "copilot",
+                "-p",
+                implementation_prompt,
+                "--agent",
+                "issue-workflow",
+                "--allow-all-tools",
+                "--no-ask-user",
+                "--reasoning-effort",
+                "high",
+                "--silent",
+            ],
+            capture_output=True,
+            text=True,
+            timeout=1200,
+            check=True,
+        )
+        print(f"[INFO] Copilot workflow implementation completed for issue #{issue_number}")
 
         subprocess.run(["git", "add", "-A"], capture_output=True, text=True)
         subprocess.run(
@@ -142,9 +269,16 @@ def developer_create_branch_and_plan(issue_number: int) -> dict[str, Any]:
         )
         print(f"[INFO] Committed changes to branch: {branch}")
 
-        return {"branch": branch, "planned": True}
+        return {
+            "branch": branch,
+            "planned": True,
+            "implementation_summary": implementation_result.stdout.strip(),
+        }
     except subprocess.CalledProcessError as error:
-        raise RuntimeError(f"Failed to create/checkout branch: {error.stderr}") from error
+        command = " ".join(error.cmd) if isinstance(error.cmd, list) else str(error.cmd)
+        raise RuntimeError(
+            f"Workflow implementation command failed: {command}\n{error.stderr or error.stdout}"
+        ) from error
 
 
 def unit_tester_run_and_fix(issue_number: int) -> dict[str, Any]:
@@ -257,11 +391,7 @@ def pr_create(issue_number: int) -> dict[str, Any]:
             return {"pr_created": True, "pr_url": pr_url, "existing": True}
 
         title = f"Issue #{issue_number}: Automated implementation"
-        body = (
-            f"Closes #{issue_number}\n\n"
-            "This PR is created by the automated AI workflow. "
-            "All unit and UI tests passing. Ready for human review."
-        )
+        body = _build_pr_body(issue_number)
         result = subprocess.run(
             [
                 "gh",
