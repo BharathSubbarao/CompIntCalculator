@@ -5,6 +5,37 @@ from typing import Any
 
 from .github_api import comment_issue, get_issue, update_issue_body
 
+# Infrastructure-only paths — changes to these alone do NOT satisfy Gate 1
+_INFRA_PREFIXES = (
+    "ai_workflow/",
+    "scripts/",
+    "workflow_dashboard.py",
+    "playwright.config.ts",
+    "playwright-results.json",
+    "playwright-report/",
+    "test-results/",
+    ".github/",
+)
+
+# Product source files required for feature issues
+_PRODUCT_FILES = ("app.py",)
+
+
+def _is_infra_only(changed_files: list[str]) -> bool:
+    """Return True if every changed file is infrastructure-only."""
+    if not changed_files:
+        return True
+    return all(
+        any(f.startswith(prefix) or f == prefix.rstrip("/") for prefix in _INFRA_PREFIXES)
+        for f in changed_files
+    )
+
+
+def _has_product_change(changed_files: list[str]) -> bool:
+    """Return True if at least one product source file was changed."""
+    return any(f in _PRODUCT_FILES for f in changed_files)
+
+
 ISSUE_TEMPLATE = """## Problem Statement
 {problem_statement}
 
@@ -88,16 +119,28 @@ def developer_create_branch_and_plan(issue_number: int) -> dict[str, Any]:
             check=True,
         )
 
-        if staged_changes.stdout.strip():
-            subprocess.run(
-                ["git", "commit", "-m", f"[Issue #{issue_number}] Implementation for issue"],
-                capture_output=True,
-                text=True,
-                check=True,
+        staged_files = [f for f in staged_changes.stdout.strip().splitlines() if f]
+
+        # Gate 1 — Functional Coverage
+        if not staged_files:
+            raise RuntimeError(
+                f"Gate 1 BLOCKED: No staged changes found for issue #{issue_number}. "
+                "The developer must implement the feature in app.py before committing."
             )
-            print(f"[INFO] Committed changes to branch: {branch}")
-        else:
-            print(f"[INFO] No staged changes to commit on branch: {branch}")
+        if _is_infra_only(staged_files) or not _has_product_change(staged_files):
+            raise RuntimeError(
+                f"Gate 1 BLOCKED: Only infrastructure files were changed for issue #{issue_number}. "
+                f"Changed: {staged_files}. "
+                "At least one product file (app.py) must be modified to satisfy a feature issue."
+            )
+
+        subprocess.run(
+            ["git", "commit", "-m", f"[Issue #{issue_number}] Implementation for issue"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        print(f"[INFO] Committed changes to branch: {branch}")
 
         return {"branch": branch, "planned": True}
     except subprocess.CalledProcessError as error:
@@ -117,6 +160,19 @@ def unit_tester_run_and_fix(issue_number: int) -> dict[str, Any]:
             raise RuntimeError(f"Unit tests failed:\n{error_text}")
 
         output = result.stdout + result.stderr
+
+        # Gate 2 — Unit Test Delta
+        test_diff = subprocess.run(
+            ["git", "diff", "origin/main", "--", "tests/test_app.py"],
+            capture_output=True,
+            text=True,
+        )
+        if not test_diff.stdout.strip():
+            raise RuntimeError(
+                f"Gate 2 BLOCKED: No unit test changes found for issue #{issue_number}. "
+                "Add or update tests in tests/test_app.py that cover the new feature."
+            )
+
         print("[INFO] Unit tests completed successfully")
         return {"unit_tests_passed": True, "test_log": output[-1000:]}
     except subprocess.TimeoutExpired as error:
@@ -136,6 +192,18 @@ def ui_tester_run_and_publish(issue_number: int) -> dict[str, Any]:
         if result.returncode != 0:
             error_text = result.stdout + "\n" + result.stderr
             raise RuntimeError(f"UI regression tests failed:\n{error_text}")
+
+        # Gate 3 — UI Regression Test Delta
+        ui_diff = subprocess.run(
+            ["git", "diff", "origin/main", "--", "ui-tests/"],
+            capture_output=True,
+            text=True,
+        )
+        if not ui_diff.stdout.strip():
+            raise RuntimeError(
+                f"Gate 3 BLOCKED: No Playwright regression test changes found for issue #{issue_number}. "
+                "Add or update a .spec.ts file in ui-tests/regression/ that covers the new UI feature."
+            )
 
         comment_issue(
             issue_number,
