@@ -6,22 +6,35 @@ from pathlib import Path
 from typing import Any
 
 import streamlit as st
+import streamlit.components.v1 as components
 
 STATE_DIR = Path(".workflow/state")
 
 
+def parse_timestamp(value: str | None) -> datetime:
+    """Parse ISO timestamps from workflow state; use minimum date when missing/invalid."""
+    if not value:
+        return datetime.min
+
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00")).replace(tzinfo=None)
+    except ValueError:
+        return datetime.min
+
+
 def load_workflows() -> list[dict[str, Any]]:
-    """Load all workflow state files, newest first by file name."""
+    """Load all workflow state files, newest first by workflow updated_at."""
     if not STATE_DIR.exists():
         return []
 
     workflows: list[dict[str, Any]] = []
-    for file_path in sorted(STATE_DIR.glob("*.json"), reverse=True):
+    for file_path in STATE_DIR.glob("*.json"):
         try:
             workflows.append(json.loads(file_path.read_text(encoding="utf-8")))
         except (json.JSONDecodeError, OSError):
             continue
 
+    workflows.sort(key=lambda item: parse_timestamp(item.get("updated_at")), reverse=True)
     return workflows
 
 
@@ -42,12 +55,36 @@ def main() -> None:
     st.title("AI Workflow Dashboard")
     st.caption("Live status for issue workflows")
 
+    auto_refresh = st.sidebar.toggle("Auto-refresh", value=True)
+    refresh_seconds = st.sidebar.slider(
+        "Refresh interval (seconds)",
+        min_value=2,
+        max_value=60,
+        value=5,
+        disabled=not auto_refresh,
+    )
+
+    if auto_refresh:
+        refresh_ms = refresh_seconds * 1000
+        components.html(
+            f"""
+            <script>
+            setTimeout(function() {{
+              window.parent.location.reload();
+            }}, {refresh_ms});
+            </script>
+            """,
+            height=0,
+        )
+        st.caption(f"Auto-refreshing every {refresh_seconds} seconds.")
+
     workflows = load_workflows()
     if not workflows:
         st.info("No workflow state files found in .workflow/state")
         st.stop()
 
     workflow_ids = [item.get("workflow_id", "unknown") for item in workflows]
+    st.caption("Showing the most recently updated workflow first.")
     selected_id = st.selectbox("Workflow", options=workflow_ids, index=0)
 
     selected = next(
@@ -85,7 +122,7 @@ def main() -> None:
         st.error("Workflow is blocked and requires human intervention.")
         st.code(str(blocked.get("error", "Unknown error")), language="text")
 
-    st.caption("Refresh the page to see newer workflow updates.")
+    st.caption("Use sidebar controls to adjust auto-refresh behavior.")
 
 
 if __name__ == "__main__":
