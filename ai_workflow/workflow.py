@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from .models import WorkflowState
@@ -18,7 +18,7 @@ from .teams_notify import send_teams_escalation
 def _mark_step_start(state: WorkflowState, idx: int) -> None:
     step = state.steps[idx]
     step.status = "IN_PROGRESS"
-    step.started_at = datetime.utcnow()
+    step.started_at = datetime.now(timezone.utc)
     state.current_step = idx + 1
     state.status = "IN_PROGRESS"
     save_state(state)
@@ -27,7 +27,7 @@ def _mark_step_start(state: WorkflowState, idx: int) -> None:
 def _mark_step_done(state: WorkflowState, idx: int, output: dict[str, Any]) -> None:
     step = state.steps[idx]
     step.status = "COMPLETED"
-    step.ended_at = datetime.utcnow()
+    step.ended_at = datetime.now(timezone.utc)
     step.duration_seconds = (step.ended_at - step.started_at).total_seconds() if step.started_at else None
     step.output = output
     save_state(state)
@@ -36,7 +36,7 @@ def _mark_step_done(state: WorkflowState, idx: int, output: dict[str, Any]) -> N
 def _mark_blocked(state: WorkflowState, idx: int, error: Exception) -> None:
     step = state.steps[idx]
     step.status = "BLOCKED"
-    step.ended_at = datetime.utcnow()
+    step.ended_at = datetime.now(timezone.utc)
     step.duration_seconds = (step.ended_at - step.started_at).total_seconds() if step.started_at else None
     step.error = str(error)
     state.status = "BLOCKED"

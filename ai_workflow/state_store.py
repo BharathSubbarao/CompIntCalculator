@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .models import StepRecord, WorkflowState
@@ -19,7 +19,7 @@ def default_steps() -> list[StepRecord]:
 
 
 def create_workflow_state(workflow_id: str, issue_number: int) -> WorkflowState:
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     state = WorkflowState(
         workflow_id=workflow_id,
         issue_number=issue_number,
@@ -38,7 +38,7 @@ def state_path(workflow_id: str) -> Path:
 
 
 def save_state(state: WorkflowState) -> None:
-    state.updated_at = datetime.utcnow()
+    state.updated_at = datetime.now(timezone.utc)
     STATE_DIR.mkdir(parents=True, exist_ok=True)
     state_path(state.workflow_id).write_text(state.model_dump_json(indent=2), encoding="utf-8")
 

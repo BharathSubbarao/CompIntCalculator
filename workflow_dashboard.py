@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -44,7 +44,9 @@ def format_time(value: str | None) -> str:
 
     try:
         parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
-        return parsed.strftime("%Y-%m-%d %H:%M:%S")
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        return parsed.astimezone().strftime("%Y-%m-%d %H:%M:%S")
     except ValueError:
         return value
 
