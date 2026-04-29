@@ -23,10 +23,27 @@ _PRODUCT_FILES = ("app.py",)
 
 
 def _build_implementation_prompt(issue_number: int, issue_title: str, issue_body: str) -> str:
+    # Extract the Specific Change Required section as the authoritative spec
+    specific_change = ""
+    if "## Specific Change Required" in issue_body:
+        after = issue_body.split("## Specific Change Required", 1)[1]
+        next_section = after.find("\n## ")
+        specific_change = (after[:next_section].strip() if next_section != -1 else after.strip())
+
+    scope_fence = (
+        "\n\nSCOPE FENCE — mandatory:\n"
+        "The authoritative and complete specification for this issue is:\n"
+        f"  {specific_change or issue_title}\n\n"
+        "Implement EXACTLY and ONLY what is stated above.\n"
+        "Do NOT use project conventions, canonical reference tables, or your own codebase\n"
+        "knowledge to infer additional or different changes beyond what is explicitly stated.\n"
+        "If the requirement names specific values (e.g. 'Annual, Quarterly, Monthly'), implement only those values.\n"
+    )
     return (
         f"Implement GitHub issue #{issue_number} in this repository.\n\n"
         f"Issue title: {issue_title}\n\n"
-        f"Issue body:\n{issue_body}\n\n"
+        f"Issue body:\n{issue_body}\n"
+        f"{scope_fence}\n"
         "Requirements:\n"
         "- Make the required product change in app.py or the relevant product file.\n"
         "- Add or update unit tests in tests/test_app.py for the new behavior.\n"
@@ -42,6 +59,7 @@ def _issue_is_already_refined(issue_body: str) -> bool:
     normalized = issue_body.lower()
     return (
         "## problem statement" in normalized
+        and "## specific change required" in normalized
         and "## acceptance criteria checklist" in normalized
         and "## test expectations" in normalized
     )
@@ -136,6 +154,9 @@ def _has_product_change(changed_files: list[str]) -> bool:
 ISSUE_TEMPLATE = """## Problem Statement
 {problem_statement}
 
+## Specific Change Required
+{specific_change}
+
 ## Acceptance Criteria Checklist
 - [ ] Implement feature per problem statement
 - [ ] All unit tests passing
@@ -160,6 +181,41 @@ ISSUE_TEMPLATE = """## Problem Statement
 """
 
 
+def _derive_specific_change(title: str, body: str) -> str:
+    """Ask Copilot to extract a single, literal change statement from the issue title/body.
+
+    Returns a 1–2 sentence statement using only words present in the issue.
+    Raises RuntimeError (Gate 0 BLOCK) if the issue is too ambiguous.
+    """
+    prompt = (
+        "You are a Product Owner refining a software issue.\n"
+        "Read the issue title and body below LITERALLY.\n"
+        "Derive a single concrete 'Specific Change Required' statement that answers:\n"
+        "  'What exact named element (dropdown option, field, formula, label) must be "
+        "added, removed, or changed — and to what value?'\n"
+        "Use ONLY information present in the issue title and body. "
+        "Do NOT infer from project conventions or external knowledge.\n"
+        "If the issue is too ambiguous to answer without making assumptions, reply with exactly:\n"
+        "  AMBIGUOUS: <brief reason>\n\n"
+        f"Issue title: {title}\n\n"
+        f"Issue body:\n{body}\n\n"
+        "Respond with only the Specific Change Required statement (1–2 sentences) or the AMBIGUOUS prefix."
+    )
+    result = subprocess.run(
+        ["gh", "copilot", "-p", prompt, "--no-ask-user", "--silent"],
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    output = (result.stdout.strip() or result.stderr.strip())
+    if output.upper().startswith("AMBIGUOUS"):
+        raise RuntimeError(
+            f"Gate 0 BLOCKED: Issue body is too ambiguous — cannot derive a specific change "
+            f"without assumptions. Copilot says: {output}. Please clarify the issue."
+        )
+    return output
+
+
 def product_owner_refine_issue(issue_number: int) -> dict[str, Any]:
     try:
         issue = get_issue(issue_number)
@@ -168,10 +224,16 @@ def product_owner_refine_issue(issue_number: int) -> dict[str, Any]:
         if _issue_is_already_refined(body):
             print(f"[INFO] Issue #{issue_number} already uses workflow template")
             return {"issue_updated": False, "template_applied": False}
-        refined_body = ISSUE_TEMPLATE.format(problem_statement=(body.strip() or title))
+        specific_change = _derive_specific_change(title, body)
+        refined_body = ISSUE_TEMPLATE.format(
+            problem_statement=(body.strip() or title),
+            specific_change=specific_change,
+        )
         update_issue_body(issue_number, refined_body)
-        print(f"[INFO] Issue #{issue_number} template refined")
-        return {"issue_updated": True, "template_applied": True}
+        print(f"[INFO] Issue #{issue_number} template refined. Specific Change: {specific_change}")
+        return {"issue_updated": True, "template_applied": True, "specific_change": specific_change}
+    except RuntimeError:
+        raise
     except Exception as error:
         raise RuntimeError(f"Failed to refine issue template: {error}") from error
 

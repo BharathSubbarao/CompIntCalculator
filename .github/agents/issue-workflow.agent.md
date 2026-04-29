@@ -6,15 +6,22 @@ description: "Run end-to-end Git issue workflow with PO, Developer, Unit Tester,
 Run these steps in order and stop on any unresolved blocker:
 
 ## Step 1 — Product Owner
-Refine the issue into the required template. Extract the exact functional requirement from the issue title and body.
+Refine the issue into the required template following these rules strictly:
+
+1. Read the issue title and body **literally**. Do not assume, infer, or supplement the requirement from project conventions, canonical tables, or codebase knowledge.
+2. Derive a **Specific Change Required** statement by answering: *"What exact named element (dropdown option, field, formula, label) must be added, removed, or changed, and to what value?"* — using only words present in the issue title/body.
+3. If the issue body is too ambiguous to answer step 2 without making assumptions, **BLOCK** with: `"Gate 0 BLOCKED: Issue body is too ambiguous — cannot derive a specific change without assumptions. Please clarify the issue."` Do NOT proceed.
+4. Write the refined issue using the template (which includes the `## Specific Change Required` section populated with the literal requirement from step 2).
+5. The `## Specific Change Required` section becomes the **sole authoritative specification** for the Developer step.
 
 ## Step 2 — Developer (Gate 1 required)
-1. Read `app.py` to understand current implementation.
-2. Identify exactly what must change to satisfy the issue requirement.
-3. Make the code change in `app.py` (or the relevant file) NOW — before branch creation or commits.
-4. **BLOCK** if the issue is a product feature (e.g., new dropdown option, new calculation mode) but `app.py` has not been modified.
-5. **BLOCK** if the only changed files are infra/workflow: `ai_workflow/`, `scripts/`, `workflow_dashboard.py`, `playwright.config.ts`.
-6. After making the change, create branch and commit only the meaningful source changes.
+1. Read the `## Specific Change Required` section from the refined issue. This is the **only** specification you may implement.
+2. Read `app.py` to understand the current implementation.
+3. Implement **exactly and only** what is stated in `## Specific Change Required`. Do NOT use project conventions, canonical reference tables, or codebase knowledge to infer additional or different changes beyond what the issue explicitly states.
+4. Make the code change in `app.py` (or the relevant file) NOW — before branch creation or commits.
+5. **BLOCK** if the issue is a product feature (e.g., new dropdown option, new calculation mode) but `app.py` has not been modified.
+6. **BLOCK** if the only changed files are infra/workflow: `ai_workflow/`, `scripts/`, `workflow_dashboard.py`, `playwright.config.ts`.
+7. After making the change, create branch and commit only the meaningful source changes.
 
 ## Step 3 — Unit Tester (Gate 2 required)
 1. Open `tests/test_app.py` and identify the existing test patterns.
