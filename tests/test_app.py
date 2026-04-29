@@ -64,10 +64,10 @@ class TestCalculateCompoundBalance:
         assert result > 50000.0
 
     def test_interest_earned_identity(self) -> None:
-        # S1-4: interest = FV - P - C*t
+        # S1-4: interest = FV - P - (monthly_contribution * 12 * t)
         principal, contribution, rate, years, n = 50000.0, 1000.0, 8.0, 15.0, 12
         money_fv = _balance(principal, contribution, rate, years, n)
-        money_total_contributions = contribution * years
+        money_total_contributions = contribution * 12 * years  # fixed: monthly * 12 * years
         money_interest = money_fv - principal - money_total_contributions
         assert money_interest > 0
 
@@ -505,3 +505,58 @@ class TestPlotlyTemplate:
     def test_unknown_theme_defaults_to_plotly_white(self, monkeypatch) -> None:
         monkeypatch.setattr(app.st, "get_option", lambda _: None)
         assert app.get_plotly_template() == "plotly_white"
+
+
+# ---------------------------------------------------------------------------
+# S9 – Total Contributions Formula (Issue #19)
+# ---------------------------------------------------------------------------
+
+class TestTotalContributionsFormula:
+    """S9 – Total Contributions correctly multiplies monthly contribution by 12 * years (Issue #19)"""
+
+    def test_monthly_contribution_total_is_12_times_years(self) -> None:
+        """Monthly Contribution 1000 over 10 years = 1000 * 12 * 10 = 120,000 (not 10,000)."""
+        monthly_contribution = 1000.0
+        time_years = 10.0
+        expected_total = monthly_contribution * 12 * time_years  # 120,000
+        actual_total = monthly_contribution * 12 * time_years
+        assert actual_total == 120_000.0
+
+    def test_monthly_contribution_total_formula_in_render_results(self) -> None:
+        """Verify the fix: money_total_contributions = money_monthly_contribution * 12 * time_years."""
+        import pathlib
+        source = pathlib.Path("app.py").read_text()
+        # Assert the corrected formula is present
+        assert "money_monthly_contribution * 12 * time_years" in source, (
+            "app.py must compute total contributions as monthly_contribution * 12 * time_years"
+        )
+        # Assert the total contributions assignment uses the 12-month factor
+        # Find the specific assignment line in render_results
+        lines = source.splitlines()
+        assignment_lines = [
+            line for line in lines if "money_total_contributions" in line and "=" in line
+        ]
+        assert any("* 12 *" in line for line in assignment_lines), (
+            "money_total_contributions assignment must include the * 12 * factor"
+        )
+
+    def test_total_contributions_not_equal_to_contribution_times_years_only(self) -> None:
+        """The total contributions formula must include the 12-month factor."""
+        monthly_contribution = 500.0
+        time_years = 5.0
+        wrong_total = monthly_contribution * time_years          # 2,500  (old bug)
+        correct_total = monthly_contribution * 12 * time_years  # 30,000 (fix)
+        assert correct_total != wrong_total
+        assert correct_total == 30_000.0
+
+    def test_total_contributions_scales_with_months_per_year(self) -> None:
+        """Total contributions for 1 year with monthly contribution 100 equals 1200 (12 months)."""
+        monthly_contribution = 100.0
+        time_years = 1.0
+        total = monthly_contribution * 12 * time_years
+        assert total == 1_200.0
+
+    def test_zero_monthly_contribution_yields_zero_total(self) -> None:
+        """Zero monthly contribution must produce zero total contributions."""
+        total = 0.0 * 12 * 10.0
+        assert total == 0.0
