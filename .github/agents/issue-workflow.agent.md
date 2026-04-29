@@ -11,8 +11,24 @@ Refine the issue into the required template following these rules strictly:
 1. Read the issue title and body **literally**. Do not assume, infer, or supplement the requirement from project conventions, canonical tables, or codebase knowledge.
 2. Derive a **Specific Change Required** statement by answering: *"What exact named element (dropdown option, field, formula, label) must be added, removed, or changed, and to what value?"* — using only words present in the issue title/body.
 3. If the issue body is too ambiguous to answer step 2 without making assumptions, **BLOCK** with: `"Gate 0 BLOCKED: Issue body is too ambiguous — cannot derive a specific change without assumptions. Please clarify the issue."` Do NOT proceed.
-4. Write the refined issue using the template (which includes the `## Specific Change Required` section populated with the literal requirement from step 2).
-5. The `## Specific Change Required` section becomes the **sole authoritative specification** for the Developer step.
+4. Write the refined issue body using the following template, substituting the correct values:
+   ```
+   ## Summary
+   <one-sentence description of the requirement>
+
+   ## Specific Change Required
+   <exact named element(s) to add/remove/change, using only words from the issue title/body>
+
+   ## Acceptance Criteria
+   - [ ] <criterion 1>
+   - [ ] <criterion 2>
+   ```
+5. **Update the GitHub issue** by running:
+   ```
+   gh issue edit <N> --body "<refined body from step 4>"
+   ```
+   This is mandatory — the refined body MUST be written back to the GitHub issue before proceeding.
+6. The `## Specific Change Required` section (now on the GitHub issue) becomes the **sole authoritative specification** for the Developer step.
 
 ## Step 2 — Developer (Gate 1 required)
 1. Read the `## Specific Change Required` section from the refined issue. This is the **only** specification you may implement.
