@@ -113,7 +113,7 @@ class TestCalculateCompoundBalance:
 class TestFrequencyImpact:
     """S2 – Frequency Impact"""
 
-    @pytest.mark.parametrize("n_low,n_high", [(1, 2), (2, 4), (4, 12), (12, 52), (52, 365)])
+    @pytest.mark.parametrize("n_low,n_high", [(1, 2), (2, 4), (4, 12), (12, 24), (24, 52), (52, 365)])
     def test_higher_frequency_yields_more_or_equal_balance(
         self, n_low: int, n_high: int
     ) -> None:
@@ -130,12 +130,38 @@ class TestFrequencyImpact:
         assert "Weekly" in app.FREQUENCY_OPTIONS
         assert app.FREQUENCY_OPTIONS["Weekly"] == 52
 
+    def test_semi_monthly_mapping_exists(self) -> None:
+        # Issue #16: Semi-Monthly must be present and mapped to 24
+        assert "Semi-Monthly" in app.FREQUENCY_OPTIONS
+        assert app.FREQUENCY_OPTIONS["Semi-Monthly"] == 24
+
+    def test_semi_monthly_frequency_compounds_correctly(self) -> None:
+        # Issue #16: Semi-Monthly (n=24) should produce a higher balance than
+        # Monthly (n=12) and a lower balance than Weekly (n=52) at a positive rate.
+        monthly = _balance(10000.0, 0.0, 6.0, 10.0, 12)
+        semi_monthly = _balance(10000.0, 0.0, 6.0, 10.0, 24)
+        weekly = _balance(10000.0, 0.0, 6.0, 10.0, 52)
+        assert semi_monthly > monthly, "Semi-Monthly should compound more than Monthly"
+        assert semi_monthly < weekly, "Semi-Monthly should compound less than Weekly"
+
+    def test_semi_monthly_balance_formula(self) -> None:
+        # Issue #16: Verify the exact compound formula for n=24 over 1 year at 12%
+        # FV = P * (1 + 0.12/24)^24
+        import math
+        principal = 1000.0
+        rate = 12.0
+        years = 1.0
+        n = 24
+        expected = principal * (1 + (rate / 100) / n) ** (n * years)
+        result = _balance(principal, 0.0, rate, years, n)
+        assert isclose(result, expected, rel_tol=1e-12)
+
     def test_frequency_has_no_impact_at_zero_rate(self) -> None:
         # All frequencies should produce identical results at 0% rate
-        results = [_balance(10000.0, 100.0, 0.0, 5.0, n) for n in (1, 2, 4, 12, 52, 365)]
+        results = [_balance(10000.0, 100.0, 0.0, 5.0, n) for n in (1, 2, 4, 12, 24, 52, 365)]
         assert all(isclose(r, results[0], rel_tol=1e-12) for r in results)
 
-    @pytest.mark.parametrize("n", [1, 2, 4, 12, 52, 365])
+    @pytest.mark.parametrize("n", [1, 2, 4, 12, 24, 52, 365])
     def test_all_frequencies_accept_fractional_years(self, n: int) -> None:
         result = _balance(1000.0, 50.0, 5.0, 2.5, n)
         assert isinstance(result, float) and result > 0
@@ -336,7 +362,7 @@ class TestEdgeCases:
         result = _balance(0.01, 0.01, 0.01, 0.1, 12)
         assert isinstance(result, float) and result > 0
 
-    @pytest.mark.parametrize("n", [1, 2, 4, 12, 52, 365])
+    @pytest.mark.parametrize("n", [1, 2, 4, 12, 24, 52, 365])
     def test_fractional_years_all_frequencies(self, n: int) -> None:
         # S6-5
         result = _balance(10000.0, 100.0, 5.0, 2.5, n)
