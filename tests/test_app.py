@@ -130,6 +130,23 @@ class TestFrequencyImpact:
         assert "Weekly" in app.FREQUENCY_OPTIONS
         assert app.FREQUENCY_OPTIONS["Weekly"] == 52
 
+    def test_annual_mapping_exists(self) -> None:
+        # Issue #4: "Annual" must be present as a named option with compounds_per_year=1
+        assert "Annual" in app.FREQUENCY_OPTIONS
+        assert app.FREQUENCY_OPTIONS["Annual"] == 1
+
+    def test_annual_frequency_compounds_correctly(self) -> None:
+        # Annual (n=1) should produce A = P*(1+r)^t for zero-contribution case
+        from math import isclose
+        principal, rate, years = 10000.0, 5.0, 10.0
+        result = _balance(principal, 0.0, rate, years, app.FREQUENCY_OPTIONS["Annual"])
+        expected = principal * (1 + rate / 100) ** years
+        assert isclose(result, expected, rel_tol=1e-12)
+
+    def test_annual_frequency_appears_in_dropdown_options(self) -> None:
+        # "Annual" must be a key in FREQUENCY_OPTIONS so it shows in the Streamlit dropdown
+        assert "Annual" in list(app.FREQUENCY_OPTIONS.keys())
+
     def test_frequency_has_no_impact_at_zero_rate(self) -> None:
         # All frequencies should produce identical results at 0% rate
         results = [_balance(10000.0, 100.0, 0.0, 5.0, n) for n in (1, 2, 4, 12, 52, 365)]
