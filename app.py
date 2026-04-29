@@ -177,6 +177,61 @@ def build_growth_chart(
     return figure
 
 
+# Colors and fill colors for multi-rate variance lines
+_VARIANCE_LINE_STYLES = [
+    {"color": "#28a745", "fill": "rgba(40, 167, 69, 0.10)"},   # lower rate — green
+    {"color": "#1f6feb", "fill": "rgba(31, 111, 235, 0.14)"},  # base rate  — blue
+    {"color": "#dc3545", "fill": "rgba(220, 53, 69, 0.10)"},   # higher rate — red
+]
+
+
+def build_multi_rate_growth_chart(
+    rate_series: list[dict],
+    money_currency_symbol: str,
+    money_currency_code: str,
+) -> go.Figure:
+    """Build a compound growth chart with one line per interest rate scenario.
+
+    Args:
+        rate_series: list of dicts, each with keys:
+            - ``label``: legend label, e.g. "5.00% (base)"
+            - ``growth_rows``: list[dict[str, float]] from build_growth_series()
+        money_currency_symbol: currency symbol for hover formatting
+        money_currency_code: ISO currency code for formatting
+    """
+    traces = []
+    for idx, series in enumerate(rate_series):
+        style = _VARIANCE_LINE_STYLES[idx % len(_VARIANCE_LINE_STYLES)]
+        hover_values = [
+            format_money_value(row["Balance"], money_currency_symbol, money_currency_code)
+            for row in series["growth_rows"]
+        ]
+        traces.append(
+            go.Scatter(
+                x=[row["Years"] for row in series["growth_rows"]],
+                y=[row["Balance"] for row in series["growth_rows"]],
+                name=series["label"],
+                text=hover_values,
+                mode="lines",
+                line={"width": 3, "color": style["color"]},
+                fill="tozeroy",
+                fillcolor=style["fill"],
+                hovertemplate=f"{series['label']}<br>Year %{{x:.2f}}<br>Balance %{{text}}<extra></extra>",
+            )
+        )
+
+    figure = go.Figure(data=traces)
+    figure.update_layout(
+        title="Compound Growth Over Time — Interest Rate Variance",
+        xaxis_title="Years",
+        yaxis_title=f"Balance ({money_currency_symbol})",
+        template=get_plotly_template(),
+        legend={"title": "Rate Scenario"},
+        margin={"l": 24, "r": 24, "t": 56, "b": 24},
+    )
+    return figure
+
+
 def render_sidebar_inputs() -> tuple[
     float,
     float,
@@ -186,6 +241,7 @@ def render_sidebar_inputs() -> tuple[
     str,
     str,
     str,
+    float,
 ]:
     st.sidebar.header("Inputs")
 
@@ -258,6 +314,15 @@ def render_sidebar_inputs() -> tuple[
         index=3,
     )
 
+    rate_variance_percent = st.sidebar.number_input(
+        "Interest Rate Variance Range (%)",
+        min_value=0.0,
+        value=0.0,
+        step=0.25,
+        key="rate_variance_input",
+        help="Optional: enter a variance to see growth for (rate − variance), base rate, and (rate + variance).",
+    )
+
     return (
         money_principal,
         money_monthly_contribution,
@@ -267,6 +332,7 @@ def render_sidebar_inputs() -> tuple[
         frequency_label,
         money_currency_code,
         money_currency_symbol,
+        rate_variance_percent,
     )
 
 
@@ -279,6 +345,7 @@ def render_results(
     frequency_label: str,
     money_currency_code: str,
     money_currency_symbol: str,
+    rate_variance_percent: float = 0.0,
 ) -> None:
     money_total_balance = calculate_compound_balance(
         money_principal,
@@ -337,24 +404,75 @@ def render_results(
         ),
     )
 
-    st.plotly_chart(
-        build_growth_chart(
-            money_growth_rows,
-            money_currency_symbol,
-            money_currency_code,
-        ),
-        use_container_width=True,
-    )
-
-    st.subheader("Year-by-Year Balance")
-    money_balance_column = f"Balance ({money_currency_symbol})"
-    for money_row in money_summary_rows:
-        money_row[money_balance_column] = format_money_value(
-            float(money_row.pop("Balance ($)")),
-            money_currency_symbol,
-            money_currency_code,
+    # ── Chart ──────────────────────────────────────────────────────────────────
+    if rate_variance_percent > 0:
+        rate_lower = max(0.0, annual_rate_percent - rate_variance_percent)
+        rate_upper = annual_rate_percent + rate_variance_percent
+        rate_scenarios = [
+            (rate_lower, f"{rate_lower:.2f}% (−{rate_variance_percent:.2f}%)"),
+            (annual_rate_percent, f"{annual_rate_percent:.2f}% (base)"),
+            (rate_upper, f"{rate_upper:.2f}% (+{rate_variance_percent:.2f}%)"),
+        ]
+        rate_series = [
+            {
+                "label": label,
+                "growth_rows": build_growth_series(
+                    money_principal,
+                    money_monthly_contribution,
+                    rate,
+                    time_years,
+                    compounds_per_year,
+                ),
+            }
+            for rate, label in rate_scenarios
+        ]
+        st.plotly_chart(
+            build_multi_rate_growth_chart(rate_series, money_currency_symbol, money_currency_code),
+            use_container_width=True,
         )
-    st.dataframe(money_summary_rows, use_container_width=True, hide_index=True)
+    else:
+        st.plotly_chart(
+            build_growth_chart(
+                money_growth_rows,
+                money_currency_symbol,
+                money_currency_code,
+            ),
+            use_container_width=True,
+        )
+
+    # ── Year-by-Year Summary ───────────────────────────────────────────────────
+    st.subheader("Year-by-Year Balance")
+    if rate_variance_percent > 0:
+        rate_lower = max(0.0, annual_rate_percent - rate_variance_percent)
+        rate_upper = annual_rate_percent + rate_variance_percent
+        variance_rate_configs = [
+            (rate_lower, f"Balance at {rate_lower:.2f}% ({money_currency_symbol})"),
+            (annual_rate_percent, f"Balance at {annual_rate_percent:.2f}% ({money_currency_symbol})"),
+            (rate_upper, f"Balance at {rate_upper:.2f}% ({money_currency_symbol})"),
+        ]
+        # Build the base summary rows using the base rate for period labels
+        base_summary = build_yearly_summary(
+            money_principal, money_monthly_contribution, annual_rate_percent, time_years, compounds_per_year
+        )
+        combined_rows = []
+        for row in base_summary:
+            combined_row: dict[str, str | float] = {"Period": row["Period"]}
+            for rate, col_name in variance_rate_configs:
+                balance = calculate_compound_balance(
+                    money_principal, money_monthly_contribution, rate, row["Years"], compounds_per_year
+                )
+                combined_row[col_name] = format_money_value(balance, money_currency_symbol, money_currency_code)
+            combined_rows.append(combined_row)
+        st.dataframe(combined_rows, use_container_width=True, hide_index=True)
+    else:
+        money_balance_column = f"Balance ({money_currency_symbol})"
+        for money_row in money_summary_rows:
+            money_row[money_balance_column] = format_money_value(
+                float(money_row.pop("Balance ($)")),
+                money_currency_symbol,
+                money_currency_code,
+            )
+        st.dataframe(money_summary_rows, use_container_width=True, hide_index=True)
 
 
 def main() -> None:
@@ -369,6 +487,7 @@ def main() -> None:
         frequency_label,
         money_currency_code,
         money_currency_symbol,
+        rate_variance_percent,
     ) = render_sidebar_inputs()
 
     render_results(
@@ -380,6 +499,7 @@ def main() -> None:
         frequency_label,
         money_currency_code,
         money_currency_symbol,
+        rate_variance_percent,
     )
 
 

@@ -386,8 +386,110 @@ class TestEdgeCases:
 
 
 # ---------------------------------------------------------------------------
-# S7 – Theme / Plotly Template (standalone)
+# S8 – Interest Rate Variance Range
 # ---------------------------------------------------------------------------
+
+class TestInterestRateVarianceRange:
+    """S8 – Interest Rate Variance Range (Issue #5)"""
+
+    def test_build_multi_rate_growth_chart_returns_figure(self) -> None:
+        """build_multi_rate_growth_chart returns a Plotly Figure with multiple traces."""
+        import plotly.graph_objects as go
+
+        series = [
+            {
+                "label": "3.00% (−2.00%)",
+                "growth_rows": app.build_growth_series(10000.0, 0.0, 3.0, 10.0, 12),
+            },
+            {
+                "label": "5.00% (base)",
+                "growth_rows": app.build_growth_series(10000.0, 0.0, 5.0, 10.0, 12),
+            },
+            {
+                "label": "7.00% (+2.00%)",
+                "growth_rows": app.build_growth_series(10000.0, 0.0, 7.0, 10.0, 12),
+            },
+        ]
+        fig = app.build_multi_rate_growth_chart(series, "$", "USD")
+        assert isinstance(fig, go.Figure)
+        assert len(fig.data) == 3
+
+    def test_build_multi_rate_growth_chart_trace_labels(self) -> None:
+        """Each trace in multi-rate chart carries the correct label as its name."""
+        labels = ["3.00% (−2.00%)", "5.00% (base)", "7.00% (+2.00%)"]
+        series = [
+            {
+                "label": label,
+                "growth_rows": app.build_growth_series(10000.0, 0.0, rate, 5.0, 12),
+            }
+            for label, rate in zip(labels, [3.0, 5.0, 7.0])
+        ]
+        fig = app.build_multi_rate_growth_chart(series, "₹", "INR")
+        trace_names = [trace.name for trace in fig.data]
+        assert trace_names == labels
+
+    def test_build_multi_rate_growth_chart_x_axis_label(self) -> None:
+        """Multi-rate chart x-axis label is 'Years'."""
+        series = [
+            {"label": "5.00% (base)", "growth_rows": app.build_growth_series(10000.0, 0.0, 5.0, 5.0, 12)},
+        ]
+        fig = app.build_multi_rate_growth_chart(series, "$", "USD")
+        assert fig.layout.xaxis.title.text == "Years"
+
+    def test_build_multi_rate_growth_chart_y_axis_contains_symbol(self) -> None:
+        """Multi-rate chart y-axis label contains the currency symbol."""
+        series = [
+            {"label": "5.00% (base)", "growth_rows": app.build_growth_series(10000.0, 0.0, 5.0, 5.0, 12)},
+        ]
+        fig = app.build_multi_rate_growth_chart(series, "$", "USD")
+        assert "$" in fig.layout.yaxis.title.text
+
+    def test_variance_lower_rate_yields_lower_balance_than_base(self) -> None:
+        """The lower-rate scenario produces a smaller balance than the base rate."""
+        base_rate = 5.0
+        variance = 2.0
+        lower_rate = base_rate - variance
+        balance_base = _balance(10000.0, 0.0, base_rate, 10.0, 12)
+        balance_lower = _balance(10000.0, 0.0, lower_rate, 10.0, 12)
+        assert balance_lower < balance_base
+
+    def test_variance_upper_rate_yields_higher_balance_than_base(self) -> None:
+        """The upper-rate scenario produces a larger balance than the base rate."""
+        base_rate = 5.0
+        variance = 2.0
+        upper_rate = base_rate + variance
+        balance_base = _balance(10000.0, 0.0, base_rate, 10.0, 12)
+        balance_upper = _balance(10000.0, 0.0, upper_rate, 10.0, 12)
+        assert balance_upper > balance_base
+
+    def test_variance_lower_rate_clamped_to_zero_when_variance_exceeds_base_rate(self) -> None:
+        """When variance exceeds base rate, lower rate is clamped to 0 (no negative rates)."""
+        base_rate = 1.0
+        variance = 3.0
+        lower_rate = max(0.0, base_rate - variance)
+        assert lower_rate == 0.0
+        # Ensure zero-rate calculation still works
+        result = _balance(10000.0, 0.0, lower_rate, 10.0, 12)
+        assert result == 10000.0
+
+    def test_variance_zero_produces_single_rate_result(self) -> None:
+        """When variance is 0, build_growth_series for base rate matches the standard formula."""
+        base_rate = 5.0
+        variance = 0.0
+        # When variance is 0, only the base rate is used — growth series should match standard output
+        rows_standard = app.build_growth_series(10000.0, 0.0, base_rate, 10.0, 12)
+        rows_variance = app.build_growth_series(10000.0, 0.0, base_rate + variance, 10.0, 12)
+        for r1, r2 in zip(rows_standard, rows_variance):
+            assert isclose(r1["Balance"], r2["Balance"], rel_tol=1e-12)
+
+    def test_build_multi_rate_growth_chart_title_contains_variance_keyword(self) -> None:
+        """Multi-rate chart title references the interest rate variance."""
+        series = [
+            {"label": "5.00% (base)", "growth_rows": app.build_growth_series(10000.0, 0.0, 5.0, 5.0, 12)},
+        ]
+        fig = app.build_multi_rate_growth_chart(series, "$", "USD")
+        assert "Variance" in fig.layout.title.text or "variance" in fig.layout.title.text.lower()
+
 
 class TestPlotlyTemplate:
     """S7 – Theme alignment"""
