@@ -19,6 +19,7 @@ def get_plotly_template() -> str:
 # Frequency mapping: single source of truth for dropdown and calculations
 FREQUENCY_OPTIONS = {
     "Annually": 1,
+    "Annual": 1,
     "Half Yearly": 2,
     "Quarterly": 4,
     "Monthly": 12,
