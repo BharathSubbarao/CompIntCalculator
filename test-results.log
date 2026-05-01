@@ -255,3 +255,64 @@ tests/test_app.py::test_build_growth_chart_uses_formatted_hover_text PASSED [100
 [2026-04-21 14:31:21] 
 [2026-04-21 14:31:21] ============================== 62 passed in 5.85s ==============================
 [2026-04-21 14:31:21] ===== TEST RUN END   2026-04-21 14:31:21 IST (exit=0) =====
+[2026-05-01 18:35:05] ===== TEST RUN START 2026-05-01 18:35:04 IST =====
+[2026-05-01 18:35:05] ============================= test session starts ==============================
+[2026-05-01 18:35:05] platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Library/Developer/CommandLineTools/usr/bin/python3
+[2026-05-01 18:35:05] cachedir: .pytest_cache
+[2026-05-01 18:35:05] rootdir: /Users/bsubbarao/MYDATA/CompIntCalculator
+[2026-05-01 18:35:05] plugins: anyio-4.12.1
+[2026-05-01 18:35:05] collecting ... collected 105 items / 2 errors
+[2026-05-01 18:35:05] 
+[2026-05-01 18:35:05] ==================================== ERRORS ====================================
+[2026-05-01 18:35:05] _______________ ERROR collecting tests/test_workflow_personas.py _______________
+[2026-05-01 18:35:05] ImportError while importing test module '/Users/bsubbarao/MYDATA/CompIntCalculator/tests/test_workflow_personas.py'.
+[2026-05-01 18:35:05] Hint: make sure your test modules/packages have valid Python names.
+[2026-05-01 18:35:06] Traceback:
+[2026-05-01 18:35:06] ../../Library/Python/3.9/lib/python/site-packages/_pytest/python.py:498: in importtestmodule
+[2026-05-01 18:35:06]     mod = import_path(
+[2026-05-01 18:35:06] ../../Library/Python/3.9/lib/python/site-packages/_pytest/pathlib.py:587: in import_path
+[2026-05-01 18:35:06]     importlib.import_module(module_name)
+[2026-05-01 18:35:06] /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+[2026-05-01 18:35:06]     return _bootstrap._gcd_import(name[level:], package, level)
+[2026-05-01 18:35:06] <frozen importlib._bootstrap>:1030: in _gcd_import
+[2026-05-01 18:35:06]     ???
+[2026-05-01 18:35:06] <frozen importlib._bootstrap>:1007: in _find_and_load
+[2026-05-01 18:35:06]     ???
+[2026-05-01 18:35:06] <frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+[2026-05-01 18:35:06]     ???
+[2026-05-01 18:35:06] <frozen importlib._bootstrap>:680: in _load_unlocked
+[2026-05-01 18:35:06]     ???
+[2026-05-01 18:35:06] ../../Library/Python/3.9/lib/python/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2026-05-01 18:35:06]     exec(co, module.__dict__)
+[2026-05-01 18:35:06] tests/test_workflow_personas.py:7: in <module>
+[2026-05-01 18:35:06]     from ai_workflow import personas
+[2026-05-01 18:35:06] E   ModuleNotFoundError: No module named 'ai_workflow'
+[2026-05-01 18:35:06] ___________ ERROR collecting tests/test_workflow_start_validation.py ___________
+[2026-05-01 18:35:06] ImportError while importing test module '/Users/bsubbarao/MYDATA/CompIntCalculator/tests/test_workflow_start_validation.py'.
+[2026-05-01 18:35:06] Hint: make sure your test modules/packages have valid Python names.
+[2026-05-01 18:35:06] Traceback:
+[2026-05-01 18:35:06] ../../Library/Python/3.9/lib/python/site-packages/_pytest/python.py:498: in importtestmodule
+[2026-05-01 18:35:06]     mod = import_path(
+[2026-05-01 18:35:06] ../../Library/Python/3.9/lib/python/site-packages/_pytest/pathlib.py:587: in import_path
+[2026-05-01 18:35:06]     importlib.import_module(module_name)
+[2026-05-01 18:35:06] /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+[2026-05-01 18:35:06]     return _bootstrap._gcd_import(name[level:], package, level)
+[2026-05-01 18:35:06] <frozen importlib._bootstrap>:1030: in _gcd_import
+[2026-05-01 18:35:06]     ???
+[2026-05-01 18:35:06] <frozen importlib._bootstrap>:1007: in _find_and_load
+[2026-05-01 18:35:06]     ???
+[2026-05-01 18:35:06] <frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+[2026-05-01 18:35:06]     ???
+[2026-05-01 18:35:06] <frozen importlib._bootstrap>:680: in _load_unlocked
+[2026-05-01 18:35:06]     ???
+[2026-05-01 18:35:06] ../../Library/Python/3.9/lib/python/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2026-05-01 18:35:06]     exec(co, module.__dict__)
+[2026-05-01 18:35:06] tests/test_workflow_start_validation.py:13: in <module>
+[2026-05-01 18:35:06]     from ai_workflow.github_api import IssueNotFoundError
+[2026-05-01 18:35:06] E   ModuleNotFoundError: No module named 'ai_workflow'
+[2026-05-01 18:35:06] =========================== short test summary info ============================
+[2026-05-01 18:35:06] ERROR tests/test_workflow_personas.py
+[2026-05-01 18:35:06] ERROR tests/test_workflow_start_validation.py
+[2026-05-01 18:35:06] !!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+[2026-05-01 18:35:06] ============================== 2 errors in 0.88s ===============================
+[2026-05-01 18:35:06] ===== TEST RUN END   2026-05-01 18:35:05 IST (exit=2) =====

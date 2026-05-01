@@ -299,9 +299,9 @@ def build_growth_chart(
 
 # Colors and fill colors for multi-rate variance lines (Axis Bank palette)
 _VARIANCE_LINE_STYLES = [
-    {"color": "#C41E5B", "fill": "rgba(196, 30, 91, 0.10)"},   # lower rate — light red
-    {"color": "#97144D", "fill": "rgba(151, 20, 77, 0.14)"},   # base rate  — Axis red
-    {"color": "#6B0F38", "fill": "rgba(107, 15, 56, 0.10)"},   # higher rate — dark maroon
+    {"color": "#F7B500", "fill": "rgba(247, 181, 0, 0.12)"},    # lower rate — Axis gold accent
+    {"color": "#97144D", "fill": "rgba(151, 20, 77, 0.14)"},    # base rate  — Axis maroon
+    {"color": "#E31837", "fill": "rgba(227, 24, 55, 0.10)"},    # higher rate — Axis bright red
 ]
 
 
