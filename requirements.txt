@@ -3,7 +3,3 @@ plotly
 numpy
 pandas
 pytest
-fastapi
-uvicorn
-pydantic
-requests

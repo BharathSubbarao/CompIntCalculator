@@ -3,129 +3,278 @@ name: issue-workflow
 description: "Run end-to-end Git issue workflow with PO, Developer, Unit Tester, UI Tester, and PR creation for CompIntCalculator."
 ---
 
-## Workflow State Tracking (MANDATORY)
+## Workflow State Tracking — NON-NEGOTIABLE RULES
 
-Before starting any step, create a workflow state file so the dashboard can display live progress.
+State writes are **blocking requirements**. You MUST run the state update command and confirm it prints `[OK]` before proceeding with any step's work. If the command exits non-zero or does not print `[OK]`, STOP and report the error.
 
+**State updater**: `scripts/update_workflow_state.py`
 **State file location**: `.workflow/state/<workflow_id>.json`
-**Workflow ID format**: `issue-<N>-<YYYYMMDDHHMMSS>`
+**Workflow ID format**: `issue-<N>-<YYYYMMDDHHMMSS>` (use current UTC time)
 
-### State file schema
-```json
-{
-  "workflow_id": "issue-16-20260429102500",
-  "issue_number": 16,
-  "status": "IN_PROGRESS",
-  "current_step": 1,
-  "created_at": "2026-04-29T10:25:00",
-  "updated_at": "2026-04-29T10:25:00",
-  "steps": [
-    { "step_id": 1, "name": "Product Owner Issue Refinement", "persona": "product_owner", "status": "PENDING", "started_at": null, "ended_at": null, "duration_seconds": null, "output": null, "error": null },
-    { "step_id": 2, "name": "Developer Implementation",        "persona": "developer",      "status": "PENDING", "started_at": null, "ended_at": null, "duration_seconds": null, "output": null, "error": null },
-    { "step_id": 3, "name": "Unit Testing",                   "persona": "unit_tester",    "status": "PENDING", "started_at": null, "ended_at": null, "duration_seconds": null, "output": null, "error": null },
-    { "step_id": 4, "name": "UI Regression Testing",          "persona": "ui_tester",      "status": "PENDING", "started_at": null, "ended_at": null, "duration_seconds": null, "output": null, "error": null },
-    { "step_id": 5, "name": "Pull Request Creation",          "persona": "pr_creator",     "status": "PENDING", "started_at": null, "ended_at": null, "duration_seconds": null, "output": null, "error": null }
-  ]
-}
-```
+### State update command reference
 
-### State update rules
-At each step boundary, update the JSON file using `python3 -c` or a bash heredoc:
-- **Before a step starts**: set that step's `status` to `"IN_PROGRESS"`, set `started_at` to current UTC time, set top-level `current_step` to that step's `step_id`, set top-level `status` to `"IN_PROGRESS"`.
-- **After a step succeeds**: set that step's `status` to `"COMPLETED"`, set `ended_at` to current UTC time, compute `duration_seconds`.
-- **If a step is BLOCKED**: set that step's `status` to `"BLOCKED"`, set `ended_at`, set `error` to the block reason, set top-level `status` to `"BLOCKED"`.
-- **After all steps succeed**: set top-level `status` to `"COMPLETED"`.
-- Always update the top-level `updated_at` on every write.
-
-Use this Python snippet pattern to update the state file (replace values as needed):
 ```bash
-python3 - <<'EOF'
-import json, re
-from datetime import datetime
-from pathlib import Path
+# 1. Create initial state file (run ONCE before Step 1)
+python3 scripts/update_workflow_state.py \
+  --init --workflow-id <workflow_id> --issue-number <N>
 
-STATE_FILE = Path(".workflow/state/<workflow_id>.json")
-state = json.loads(STATE_FILE.read_text())
-now = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S")
+# 2. Mark step IN_PROGRESS (run BEFORE starting any step's work)
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step <1-5> --status IN_PROGRESS
 
-# Example: mark step 1 as IN_PROGRESS
-step = next(s for s in state["steps"] if s["step_id"] == 1)
-step["status"] = "IN_PROGRESS"
-step["started_at"] = now
-state["current_step"] = 1
-state["status"] = "IN_PROGRESS"
-state["updated_at"] = now
-STATE_FILE.write_text(json.dumps(state, indent=2))
-EOF
+# 3. Mark step COMPLETED (run AFTER step's work succeeds)
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step <1-5> --status COMPLETED
+
+# 4. Mark step BLOCKED (run on any gate failure — then STOP)
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step <1-5> --status BLOCKED \
+  --error "<exact gate failure reason>"
+
+# 5. Mark entire workflow COMPLETED (run after Step 5 COMPLETED)
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --complete
 ```
+
+### Verification rule
+Every command above prints `[OK] State updated → ...` on success.
+**You MUST confirm `[OK]` appears in the output before continuing.**
+If the output shows `[ERROR]` instead, stop immediately and report it.
 
 ---
 
 Run these steps in order and stop on any unresolved blocker:
 
 ## Step 1 — Product Owner
-1. **Create the initial state file** now (before doing any work):
-   - Generate `workflow_id` as `issue-<N>-<YYYYMMDDHHMMSS>` using the current UTC time.
-   - Create `.workflow/state/` directory if it doesn't exist.
-   - Write the full state JSON with all 5 steps as `"PENDING"`, top-level `status` = `"PENDING"`, `current_step` = `0`.
-2. **Mark Step 1 IN_PROGRESS** in the state file.
-3. Refine the issue into the required template following these rules strictly:
-   - Read the issue title and body **literally**. Do not assume, infer, or supplement the requirement from project conventions, canonical tables, or codebase knowledge.
-   - Derive a **Specific Change Required** statement by answering: *"What exact named element (dropdown option, field, formula, label) must be added, removed, or changed, and to what value?"* — using only words present in the issue title/body.
-   - If the issue body is too ambiguous to answer without making assumptions, **BLOCK** with: `"Gate 0 BLOCKED: Issue body is too ambiguous — cannot derive a specific change without assumptions. Please clarify the issue."` Mark Step 1 as `"BLOCKED"` in the state file. Do NOT proceed.
-4. Write the refined issue body using the following template:
+
+```bash
+# INIT — create state file (run first, before any work)
+python3 scripts/update_workflow_state.py \
+  --init --workflow-id issue-<N>-<YYYYMMDDHHMMSS> --issue-number <N>
+```
+✅ Confirm `[OK]` before continuing.
+
+```bash
+# Mark Step 1 IN_PROGRESS
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 1 --status IN_PROGRESS
+```
+✅ Confirm `[OK]` before continuing.
+
+1. Read the issue title and body **literally** — do not assume, infer, or supplement from project conventions.
+2. Derive a **Specific Change Required** statement answering: *"What exact named element must be added, removed, or changed, and to what value?"* — using only words present in the issue.
+3. If too ambiguous to answer without assumptions:
+   ```bash
+   python3 scripts/update_workflow_state.py \
+     --workflow-id <workflow_id> --step 1 --status BLOCKED \
+     --error "Gate 0 BLOCKED: Issue body is too ambiguous — cannot derive a specific change without assumptions. Please clarify the issue."
+   ```
+   ✅ Confirm `[OK]`, then **STOP**.
+
+4. Write the refined issue body:
    ```
    ## Summary
    <one-sentence description of the requirement>
 
    ## Specific Change Required
-   <exact named element(s) to add/remove/change, using only words from the issue title/body>
+   <exact named element(s) to add/remove/change, using only words from the issue>
 
    ## Acceptance Criteria
    - [ ] <criterion 1>
    - [ ] <criterion 2>
    ```
-5. **Update the GitHub issue** by running `gh issue edit <N> --body "<refined body>"`. This is mandatory.
-6. **Mark Step 1 COMPLETED** in the state file (set `ended_at`, `duration_seconds`).
-7. The `## Specific Change Required` section becomes the **sole authoritative specification** for the Developer step.
+5. Run: `gh issue edit <N> --body "<refined body>"` — mandatory.
+
+```bash
+# Mark Step 1 COMPLETED
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 1 --status COMPLETED
+```
+✅ Confirm `[OK]` before continuing to Step 2.
+
+The `## Specific Change Required` section is now the **sole authoritative spec** for the Developer step.
+
+---
 
 ## Step 2 — Developer (Gate 1 required)
-1. **Mark Step 2 IN_PROGRESS** in the state file.
-2. Read the `## Specific Change Required` section from the refined issue. This is the **only** specification you may implement.
-3. Read `app.py` to understand the current implementation.
-4. Implement **exactly and only** what is stated in `## Specific Change Required`.
-5. Make the code change in `app.py` (or the relevant file) NOW — before branch creation or commits.
-6. **BLOCK** (mark Step 2 `"BLOCKED"` in state file) if the issue is a product feature but `app.py` has not been modified.
-7. **BLOCK** if the only changed files are infra/workflow: `ai_workflow/`, `scripts/`, `workflow_dashboard.py`, `playwright.config.ts`.
-8. After making the change, create branch and commit only the meaningful source changes.
-9. **Mark Step 2 COMPLETED** in the state file.
+
+```bash
+# Mark Step 2 IN_PROGRESS
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 2 --status IN_PROGRESS
+```
+✅ Confirm `[OK]` before continuing.
+
+1. Read ONLY the `## Specific Change Required` section from the refined issue.
+2. Read `app.py` to understand the current implementation.
+3. Implement **exactly and only** what the spec states — make the change in `app.py` NOW.
+4. Run `git diff --name-only` to inspect changed files.
+5. If `app.py` has NOT been modified (feature issue):
+   ```bash
+   python3 scripts/update_workflow_state.py \
+     --workflow-id <workflow_id> --step 2 --status BLOCKED \
+     --error "Gate 1 BLOCKED: No product file (app.py) was changed."
+   ```
+   ✅ Confirm `[OK]`, then **STOP**.
+
+6. If only infra files changed (`scripts/`, `workflow_dashboard.py`, `playwright.config.ts`):
+   ```bash
+   python3 scripts/update_workflow_state.py \
+     --workflow-id <workflow_id> --step 2 --status BLOCKED \
+     --error "Gate 1 BLOCKED: Only infrastructure files were changed. At least one product file (app.py) must be modified."
+   ```
+   ✅ Confirm `[OK]`, then **STOP**.
+
+7. Create branch and commit only meaningful source changes:
+   ```bash
+   git checkout -b feature/issue-<N>
+   git add app.py tests/ ui-tests/
+   git commit -m "[Issue #N] Implementation"
+   ```
+
+```bash
+# Mark Step 2 COMPLETED
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 2 --status COMPLETED
+```
+✅ Confirm `[OK]` before continuing to Step 3.
+
+---
 
 ## Step 3 — Unit Tester (Gate 2 required)
-1. **Mark Step 3 IN_PROGRESS** in the state file.
-2. Open `tests/test_app.py` and identify the existing test patterns.
-3. Add new test(s) or update existing ones to directly cover the new behavior.
-4. Test function names must reference the feature (e.g., `test_weekly_frequency_compounds_correctly`).
-5. **BLOCK** (mark Step 3 `"BLOCKED"` in state file) if no test in `tests/test_app.py` covers the implemented change.
-6. Run `bash scripts/run_tests_with_log.sh` and assert all pass.
-7. **Mark Step 3 COMPLETED** in the state file.
+
+```bash
+# Mark Step 3 IN_PROGRESS
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 3 --status IN_PROGRESS
+```
+✅ Confirm `[OK]` before continuing.
+
+1. Read `tests/test_app.py` and identify existing test patterns.
+2. Write new test(s) directly covering the new behavior. Test names must reference the feature keyword (e.g., `test_weekly_frequency_compounds_correctly`).
+3. Check: `git diff origin/main -- tests/test_app.py` — if empty:
+   ```bash
+   python3 scripts/update_workflow_state.py \
+     --workflow-id <workflow_id> --step 3 --status BLOCKED \
+     --error "Gate 2 BLOCKED: No unit test was added or modified for this feature."
+   ```
+   ✅ Confirm `[OK]`, then **STOP**.
+
+4. Run tests:
+   ```bash
+   bash scripts/run_tests_with_log.sh
+   ```
+   If any test fails:
+   ```bash
+   python3 scripts/update_workflow_state.py \
+     --workflow-id <workflow_id> --step 3 --status BLOCKED \
+     --error "Gate 2 BLOCKED: Unit tests failed. Fix failures before proceeding."
+   ```
+   ✅ Confirm `[OK]`, then **STOP**.
+
+```bash
+# Mark Step 3 COMPLETED
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 3 --status COMPLETED
+```
+✅ Confirm `[OK]` before continuing to Step 4.
+
+---
 
 ## Step 4 — UI Tester (Gate 3 required)
-1. **Mark Step 4 IN_PROGRESS** in the state file.
-2. Open the relevant Playwright spec files in `ui-tests/regression/`.
-3. Add or update a scenario that verifies the new UI element or behavior is visible and functional.
-4. **BLOCK** (mark Step 4 `"BLOCKED"` in state file) if no Playwright test references the new UI option by name.
-5. Run `bash scripts/run_ui_regression.sh` and assert all pass.
-6. **Mark Step 4 COMPLETED** in the state file.
+
+```bash
+# Mark Step 4 IN_PROGRESS
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 4 --status IN_PROGRESS
+```
+✅ Confirm `[OK]` before continuing.
+
+1. Read relevant Playwright spec files in `ui-tests/regression/`.
+2. Add or update a scenario that verifies the new UI element or behavior by its exact label name.
+3. Check: `git diff origin/main -- ui-tests/` — if empty:
+   ```bash
+   python3 scripts/update_workflow_state.py \
+     --workflow-id <workflow_id> --step 4 --status BLOCKED \
+     --error "Gate 3 BLOCKED: No Playwright regression test was added or modified for this feature."
+   ```
+   ✅ Confirm `[OK]`, then **STOP**.
+
+4. Run regression:
+   ```bash
+   bash scripts/run_ui_regression.sh
+   ```
+   If any Playwright test fails:
+   ```bash
+   python3 scripts/update_workflow_state.py \
+     --workflow-id <workflow_id> --step 4 --status BLOCKED \
+     --error "Gate 3 BLOCKED: UI regression tests failed. Fix failures before proceeding."
+   ```
+   ✅ Confirm `[OK]`, then **STOP**.
+
+```bash
+# Mark Step 4 COMPLETED
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 4 --status COMPLETED
+```
+✅ Confirm `[OK]` before continuing to Step 5.
+
+---
 
 ## Step 5 — Pull Request (Gate 4 required)
-1. **Mark Step 5 IN_PROGRESS** in the state file.
-2. PR title: `Issue #N: <feature description>`.
-3. PR body must contain a traceability checklist:
-   - `app.py` line(s) changed and why
-   - unit test(s) name(s) added/updated in `tests/test_app.py`
-   - Playwright test(s) name(s) added/updated in `ui-tests/regression/`
-4. **BLOCK** (mark Step 5 `"BLOCKED"` in state file) if any acceptance criterion from the issue is not covered.
-5. Create the PR.
-6. **Mark Step 5 COMPLETED** in the state file and set top-level `status` to `"COMPLETED"`.
 
-On blocker, mark workflow blocked and stop.
+```bash
+# Mark Step 5 IN_PROGRESS
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 5 --status IN_PROGRESS
+```
+✅ Confirm `[OK]` before continuing.
+
+1. Push branch: `git push -u origin feature/issue-<N>`
+2. Read acceptance criteria from the refined issue body.
+3. If no `- [ ]` checkboxes exist in the issue body:
+   ```bash
+   python3 scripts/update_workflow_state.py \
+     --workflow-id <workflow_id> --step 5 --status BLOCKED \
+     --error "Gate 4 BLOCKED: Issue has no acceptance criteria checkboxes."
+   ```
+   ✅ Confirm `[OK]`, then **STOP**.
+
+4. Build PR body with full traceability:
+   ```
+   Closes #N
+
+   ## Implementation
+   - Changed: <file(s)> — <why>
+
+   ## Unit Tests
+   - Added/updated: <test function names>
+
+   ## UI Regression Tests
+   - Added/updated: <spec file and scenario names>
+
+   ## Acceptance Criteria
+   - [x] <criterion 1>
+   - [x] <criterion 2>
+   ```
+5. Create the PR:
+   ```bash
+   gh pr create --base main --head feature/issue-<N> \
+     --title "Issue #N: <feature description>" \
+     --body "<pr body above>"
+   ```
+
+```bash
+# Mark Step 5 COMPLETED
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --step 5 --status COMPLETED
+
+# Mark entire workflow COMPLETED
+python3 scripts/update_workflow_state.py \
+  --workflow-id <workflow_id> --complete
+```
+✅ Confirm both print `[OK]`. Workflow is now COMPLETED.
+
+---
+
+**On any blocker**: run the BLOCKED state command, confirm `[OK]`, then STOP. Do not proceed to the next step.
