@@ -1,28 +1,24 @@
 import { expect, test } from "@playwright/test";
 
 /**
- * UI Regression — Issue #24
+ * UI Regression — Issue #24 (corrected root-cause analysis)
  *
  * Bug: When Principal Amount = 0 and Monthly Contribution > 0, the
- * "Interest Earned" metric displayed a negative number.
+ * "Interest Earned" metric displayed a negative number with low-frequency
+ * compounding (e.g. Annually).
  *
- * Root cause: money_total_contributions was computed as
- *   monthly_contribution * 12 * years
- * instead of
- *   monthly_contribution * compounds_per_year * years
- *
- * The negative value was most pronounced with low-frequency compounding
- * (e.g. Annually = 1 compound/year): the old code over-counted contributions
- * by 12×, making Interest Earned = balance - 0 - (12× actual contributions)
- * which went deeply negative.
+ * Root cause: calculate_compound_balance treated the monthly contribution as
+ * a per-compounding-period contribution, so with Annual compounding (n=1) the
+ * FV only grew by C × 1 per year — far less than the 12 × C that the user
+ * actually deposits each year.  The real fix is two-part:
+ *   1. calculate_compound_balance converts C to per-period: C × 12 / n
+ *   2. money_total_contributions = C × 12 × years  (always monthly semantics)
  *
  * Example with P=0, C=100, R=5%, T=10yr, Annually:
- *   balance             ≈ $1,257.79
- *   contributions (fix) =   100 × 1 × 10 = $1,000.00
- *   Interest Earned     ≈     $257.79  ← correct (positive)
- *
- *   contributions (bug) =   100 × 12 × 10 = $12,000.00
- *   Interest Earned     ≈ -$10,742.21 ← wrong (negative)
+ *   periodic contribution (fixed) = 100 × 12 / 1 = 1,200/year
+ *   balance (fixed)    ≈ ₹15,093.47
+ *   contributions      =  100 × 12 × 10 = ₹12,000.00
+ *   Interest Earned    ≈   ₹3,093.47  ← correct (positive)
  */
 test.describe("UI Regression — Zero Principal Interest Earned fix (Issue #24)", () => {
   // ── Helper: select "Annually" compounding ──────────────────────────────────
@@ -75,9 +71,9 @@ test.describe("UI Regression — Zero Principal Interest Earned fix (Issue #24)"
     }
   );
 
-  // ── Test 2: Total Contributions is NOT 12× overcounted with Annually ────────
+  // ── Test 2: Total Contributions is always monthly × 12 × years ──────────────
   test(
-    "Total Contributions shows period-correct ₹1,000.00 (not overcounted ₹12,000.00) with Annually compounding",
+    "Total Contributions shows monthly-correct ₹12,000.00 (100 × 12 × 10) with Annually compounding",
     async ({ page }) => {
       await page.goto("/");
 
@@ -96,15 +92,13 @@ test.describe("UI Regression — Zero Principal Interest Earned fix (Issue #24)"
       // Compounding → Annually (compounds_per_year = 1)
       await selectAnnuallyCompounding(page);
 
-      // With the fix, using defaults (R=5%, T=10yr):
-      //   total_contribs (fix) = 100 × 1 × 10 = 1,000  → "₹1,000.00"
-      //   total_contribs (bug) = 100 × 12 × 10 = 12,000 → "₹12,000.00"  ← overcounted
-      //
-      // Verifying ₹1,000.00 is present confirms compounds_per_year is used, not 12.
+      // Total Contributions = monthly_contribution × 12 months/year × years
+      //   = 100 × 12 × 10 = 12,000  → "₹12,000.00"
+      // This must NOT show ₹1,000.00 (the Issue #24 regression value: 100 × 1 × 10).
       await expect(page.getByText("Total Contributions")).toBeVisible({ timeout: 15_000 });
       await expect(
-        page.getByText("₹1,000.00"),
-        "Total Contributions must be ₹1,000.00 (100 × 1 × 10), NOT the overcounted ₹12,000.00"
+        page.getByText("₹12,000.00"),
+        "Total Contributions must be ₹12,000.00 (100 × 12 × 10), NOT the under-counted ₹1,000.00"
       ).toBeVisible({ timeout: 15_000 });
 
       // Also confirm Interest Earned is still non-negative

@@ -37,12 +37,14 @@ def calculate_compound_balance(
 ) -> float:
     rate_decimal = annual_rate_percent / 100
     total_periods = compounds_per_year * time_years
+    # "Monthly Contribution" is always 12 payments/year; convert to the per-compounding-period amount.
+    periodic_contribution = money_monthly_contribution * 12 / compounds_per_year
     if rate_decimal == 0:
-        return money_principal + (money_monthly_contribution * time_years)
+        return money_principal + (money_monthly_contribution * 12 * time_years)
 
     periodic_rate = rate_decimal / compounds_per_year
     growth_multiplier = (1 + periodic_rate) ** total_periods
-    return money_principal * growth_multiplier + money_monthly_contribution * (
+    return money_principal * growth_multiplier + periodic_contribution * (
         (growth_multiplier - 1) / periodic_rate
     )
 
@@ -354,7 +356,7 @@ def render_results(
         time_years,
         compounds_per_year,
     )
-    money_total_contributions = money_monthly_contribution * compounds_per_year * time_years
+    money_total_contributions = money_monthly_contribution * 12 * time_years
     money_interest_earned = (
         money_total_balance - money_principal - money_total_contributions
     )

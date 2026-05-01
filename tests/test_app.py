@@ -47,9 +47,9 @@ class TestCalculateCompoundBalance:
     """S1 – Calculation Correctness"""
 
     def test_zero_rate_returns_principal_plus_contribution_times_years(self) -> None:
-        # S1-2: zero-rate case — linear growth
+        # S1-2: zero-rate case — linear growth (monthly contribution × 12 months × years)
         result = _balance(25000.0, 1200.0, 0.0, 7.5, 4)
-        assert result == 34000.0  # 25000 + 1200*7.5
+        assert result == 133000.0  # 25000 + 1200*12*7.5
 
     def test_zero_contribution_matches_principal_only_formula(self) -> None:
         # S1-1: base case, no contribution
@@ -348,9 +348,9 @@ class TestEdgeCases:
         assert result == 0.0
 
     def test_zero_principal_zero_rate_positive_contribution(self) -> None:
-        # S6-2: no divide-by-zero, linear accumulation
+        # S6-2: no divide-by-zero, linear accumulation (monthly contribution × 12 months × years)
         result = _balance(0.0, 500.0, 0.0, 10.0, 12)
-        assert result == 5000.0  # 500 * 10
+        assert result == 60000.0  # 500 * 12 * 10
 
     def test_very_large_values_do_not_raise(self) -> None:
         # S6-3
@@ -540,6 +540,23 @@ class TestTotalContributions:
         correct_result = contribution * 12 * years  # fix:    120,000
         assert correct_result == 12 * wrong_result
 
+    def test_total_contributions_uses_12_not_compounding_periods(self) -> None:
+        """Regression guard (Issue #24): total contributions must always use 12 months/year
+        regardless of compounding frequency.  With Annual compounding (n=1) and
+        contribution=1000 over 10 years the result is 120,000 not 10,000."""
+        contribution = 1000.0
+        years = 10.0
+        # The correct formula — always 12 months per year
+        assert contribution * 12 * years == 120_000.0
+        # Guard: confirm the per-period formula gives a different (wrong) answer for n=1
+        assert contribution * 1 * years != 120_000.0
+        # Through the actual FV function: interest must be non-negative with the 12-month formula
+        fv = app.calculate_compound_balance(0.0, contribution, 5.0, years, 1)
+        interest_with_correct_formula = fv - 0.0 - (contribution * 12 * years)
+        assert interest_with_correct_formula >= 0, (
+            "With the 12-month formula, Interest Earned must be non-negative for n=1"
+        )
+
 
 class TestPlotlyTemplate:
     """S7 – Theme alignment"""
@@ -580,7 +597,7 @@ def _interest_earned(
         time_years=years,
         compounds_per_year=n,
     )
-    total_contributions = contribution * n * years  # fixed formula
+    total_contributions = contribution * 12 * years  # monthly contribution × 12 months/year
     return total_balance - principal - total_contributions
 
 
@@ -608,52 +625,48 @@ class TestInterestEarnedZeroPrincipal:
         )
 
     def test_zero_principal_annual_frequency_interest_earned_correct_value(self) -> None:
-        """Issue #24 accuracy: annual compounding (n=1), zero principal, contribution=100,
-        rate=5%, 5 years — verify interest earned equals FV annuity minus actual contributions."""
-        # FV of annuity-immediate: contribution * ((1+r)^t - 1) / r  where r = 0.05/1
+        """Accuracy: annual compounding (n=1), zero principal, contribution=100,
+        rate=5%, 5 years. Monthly contribution is converted to per-period: 100×12/1=1200/year."""
         from math import isclose as _isclose
         n, principal, contribution, rate, years = 1, 0.0, 100.0, 5.0, 5.0
         periodic_rate = (rate / 100) / n
         total_periods = n * years
-        fv_annuity = contribution * ((1 + periodic_rate) ** total_periods - 1) / periodic_rate
-        expected_contributions = contribution * n * years   # 100 * 1 * 5 = 500
+        periodic_contribution = contribution * 12 / n  # 100 monthly → 1200 annual
+        fv_annuity = periodic_contribution * ((1 + periodic_rate) ** total_periods - 1) / periodic_rate
+        expected_contributions = contribution * 12 * years   # 100 * 12 * 5 = 6000
         expected_interest = fv_annuity - expected_contributions
         actual_interest = _interest_earned(principal, contribution, rate, years, n)
         assert _isclose(actual_interest, expected_interest, rel_tol=1e-9)
 
     def test_zero_principal_weekly_frequency_interest_earned_correct_value(self) -> None:
-        """Issue #24 accuracy: weekly compounding (n=52), zero principal, contribution=50,
-        rate=4%, 3 years — verify interest earned is the annuity gain only."""
+        """Accuracy: weekly compounding (n=52), zero principal, contribution=50,
+        rate=4%, 3 years. Monthly contribution is converted to per-period: 50×12/52."""
         from math import isclose as _isclose
         n, principal, contribution, rate, years = 52, 0.0, 50.0, 4.0, 3.0
         periodic_rate = (rate / 100) / n
         total_periods = n * years
-        fv_annuity = contribution * ((1 + periodic_rate) ** total_periods - 1) / periodic_rate
-        expected_contributions = contribution * n * years  # 50 * 52 * 3 = 7800
+        periodic_contribution = contribution * 12 / n  # 50 monthly → 600/52 per week
+        fv_annuity = periodic_contribution * ((1 + periodic_rate) ** total_periods - 1) / periodic_rate
+        expected_contributions = contribution * 12 * years  # 50 * 12 * 3 = 1800
         expected_interest = fv_annuity - expected_contributions
         actual_interest = _interest_earned(principal, contribution, rate, years, n)
         assert _isclose(actual_interest, expected_interest, rel_tol=1e-9)
 
-    def test_zero_principal_bug_regression_annual_old_formula_would_be_negative(self) -> None:
-        """Regression guard: confirm the old hardcoded-12 formula DID produce negative interest
-        for n=1, and that the fix resolves it."""
-        n, principal, contribution, rate, years = 1, 0.0, 500.0, 6.0, 10.0
-        total_balance = app.calculate_compound_balance(
-            money_principal=principal,
-            money_monthly_contribution=contribution,
-            annual_rate_percent=rate,
-            time_years=years,
-            compounds_per_year=n,
+    def test_issue24_regression_guard_annual_contributions_not_undercounted(self) -> None:
+        """Regression guard: with Annual compounding (n=1), total contributions must use
+        12 months/year, NOT 1 period/year. Guards against the Issue #24 regression where
+        contributions were computed as contribution × compounds_per_year × years."""
+        contribution, years = 500.0, 10.0
+        correct_contributions = contribution * 12 * years   # 60,000
+        wrong_contributions   = contribution * 1  * years   # 5,000 (Issue #24 formula for n=1)
+        assert correct_contributions == 60_000.0
+        assert wrong_contributions   ==  5_000.0
+        assert correct_contributions != wrong_contributions
+        # Through the actual formula: interest must be positive with the correct total_contributions
+        fv = app.calculate_compound_balance(0.0, contribution, 6.0, years, 1)
+        assert fv - 0.0 - correct_contributions >= 0, (
+            "Interest Earned must be non-negative when contributions are counted correctly (×12)"
         )
-        # Demonstrate the old (buggy) calculation was negative
-        old_total_contributions = contribution * 12 * years  # hardcoded 12
-        old_interest = total_balance - principal - old_total_contributions
-        assert old_interest < 0, (
-            "Pre-condition: the old formula should have produced a negative value here."
-        )
-        # Confirm the fixed calculation is non-negative
-        fixed_interest = _interest_earned(principal, contribution, rate, years, n)
-        assert fixed_interest >= 0
 
 
 class TestInterestEarnedMonthlyRegression:
