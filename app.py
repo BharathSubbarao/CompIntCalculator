@@ -354,7 +354,7 @@ def render_results(
         time_years,
         compounds_per_year,
     )
-    money_total_contributions = money_monthly_contribution * 12 * time_years
+    money_total_contributions = money_monthly_contribution * compounds_per_year * time_years
     money_interest_earned = (
         money_total_balance - money_principal - money_total_contributions
     )
