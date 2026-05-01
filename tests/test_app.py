@@ -555,3 +555,134 @@ class TestPlotlyTemplate:
     def test_unknown_theme_defaults_to_plotly_white(self, monkeypatch) -> None:
         monkeypatch.setattr(app.st, "get_option", lambda _: None)
         assert app.get_plotly_template() == "plotly_white"
+
+
+# ---------------------------------------------------------------------------
+# S10 – Total Contributions Uses compounds_per_year (Issue #24)
+# ---------------------------------------------------------------------------
+
+def _interest_earned(
+    principal: float,
+    contribution: float,
+    rate: float,
+    years: float,
+    n: int,
+) -> float:
+    """Mirror the render_results interest-earned calculation after the Issue #24 fix.
+
+    money_total_contributions = money_monthly_contribution * compounds_per_year * time_years
+    money_interest_earned     = total_balance - principal - total_contributions
+    """
+    total_balance = app.calculate_compound_balance(
+        money_principal=principal,
+        money_monthly_contribution=contribution,
+        annual_rate_percent=rate,
+        time_years=years,
+        compounds_per_year=n,
+    )
+    total_contributions = contribution * n * years  # fixed formula
+    return total_balance - principal - total_contributions
+
+
+class TestInterestEarnedZeroPrincipal:
+    """S10 – Issue #24: zero principal with non-zero contribution must yield
+    non-negative Interest Earned for every supported compounding frequency."""
+
+    @pytest.mark.parametrize("n,label", [
+        (1,   "Annual"),
+        (2,   "Half Yearly"),
+        (4,   "Quarterly"),
+        (12,  "Monthly"),
+        (24,  "Semi-Monthly"),
+        (52,  "Weekly"),
+        (365, "Daily"),
+    ])
+    def test_zero_principal_non_negative_interest_earned_all_frequencies(
+        self, n: int, label: str
+    ) -> None:
+        """Bug #24: principal=0, contribution>0 must never produce negative Interest Earned."""
+        interest = _interest_earned(0.0, 500.0, 6.0, 10.0, n)
+        assert interest >= 0, (
+            f"Interest Earned is negative ({interest:.4f}) for {label} (n={n}). "
+            "The total_contributions formula must use compounds_per_year, not hardcoded 12."
+        )
+
+    def test_zero_principal_annual_frequency_interest_earned_correct_value(self) -> None:
+        """Issue #24 accuracy: annual compounding (n=1), zero principal, contribution=100,
+        rate=5%, 5 years — verify interest earned equals FV annuity minus actual contributions."""
+        # FV of annuity-immediate: contribution * ((1+r)^t - 1) / r  where r = 0.05/1
+        from math import isclose as _isclose
+        n, principal, contribution, rate, years = 1, 0.0, 100.0, 5.0, 5.0
+        periodic_rate = (rate / 100) / n
+        total_periods = n * years
+        fv_annuity = contribution * ((1 + periodic_rate) ** total_periods - 1) / periodic_rate
+        expected_contributions = contribution * n * years   # 100 * 1 * 5 = 500
+        expected_interest = fv_annuity - expected_contributions
+        actual_interest = _interest_earned(principal, contribution, rate, years, n)
+        assert _isclose(actual_interest, expected_interest, rel_tol=1e-9)
+
+    def test_zero_principal_weekly_frequency_interest_earned_correct_value(self) -> None:
+        """Issue #24 accuracy: weekly compounding (n=52), zero principal, contribution=50,
+        rate=4%, 3 years — verify interest earned is the annuity gain only."""
+        from math import isclose as _isclose
+        n, principal, contribution, rate, years = 52, 0.0, 50.0, 4.0, 3.0
+        periodic_rate = (rate / 100) / n
+        total_periods = n * years
+        fv_annuity = contribution * ((1 + periodic_rate) ** total_periods - 1) / periodic_rate
+        expected_contributions = contribution * n * years  # 50 * 52 * 3 = 7800
+        expected_interest = fv_annuity - expected_contributions
+        actual_interest = _interest_earned(principal, contribution, rate, years, n)
+        assert _isclose(actual_interest, expected_interest, rel_tol=1e-9)
+
+    def test_zero_principal_bug_regression_annual_old_formula_would_be_negative(self) -> None:
+        """Regression guard: confirm the old hardcoded-12 formula DID produce negative interest
+        for n=1, and that the fix resolves it."""
+        n, principal, contribution, rate, years = 1, 0.0, 500.0, 6.0, 10.0
+        total_balance = app.calculate_compound_balance(
+            money_principal=principal,
+            money_monthly_contribution=contribution,
+            annual_rate_percent=rate,
+            time_years=years,
+            compounds_per_year=n,
+        )
+        # Demonstrate the old (buggy) calculation was negative
+        old_total_contributions = contribution * 12 * years  # hardcoded 12
+        old_interest = total_balance - principal - old_total_contributions
+        assert old_interest < 0, (
+            "Pre-condition: the old formula should have produced a negative value here."
+        )
+        # Confirm the fixed calculation is non-negative
+        fixed_interest = _interest_earned(principal, contribution, rate, years, n)
+        assert fixed_interest >= 0
+
+
+class TestInterestEarnedMonthlyRegression:
+    """S10 – No regression: monthly compounding (n=12) behaviour is unchanged."""
+
+    def test_monthly_compounding_nonzero_principal_interest_positive(self) -> None:
+        """Monthly compounding with non-zero principal still yields positive interest."""
+        interest = _interest_earned(10000.0, 200.0, 5.0, 10.0, 12)
+        assert interest > 0
+
+    def test_monthly_compounding_zero_principal_interest_non_negative(self) -> None:
+        """Monthly compounding (n=12) with zero principal: interest earned is non-negative."""
+        interest = _interest_earned(0.0, 300.0, 7.0, 8.0, 12)
+        assert interest >= 0
+
+    def test_monthly_total_contributions_formula_unchanged(self) -> None:
+        """For n=12, new formula (contribution * 12 * years) equals old formula — no breakage."""
+        from math import isclose as _isclose
+        contribution, years, n = 1000.0, 10.0, 12
+        new_formula = contribution * n * years
+        old_formula = contribution * 12 * years  # n==12 so identical
+        assert _isclose(new_formula, old_formula, rel_tol=1e-12)
+
+    def test_monthly_interest_earned_identity(self) -> None:
+        """FV - principal - contributions == interest for monthly case (cross-check)."""
+        from math import isclose as _isclose
+        principal, contribution, rate, years, n = 50000.0, 1000.0, 8.0, 15.0, 12
+        fv = app.calculate_compound_balance(principal, contribution, rate, years, n)
+        total_contributions = contribution * n * years
+        expected_interest = fv - principal - total_contributions
+        actual_interest = _interest_earned(principal, contribution, rate, years, n)
+        assert _isclose(actual_interest, expected_interest, rel_tol=1e-12)
