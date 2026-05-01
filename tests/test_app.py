@@ -852,13 +852,13 @@ class TestAxisBankChartColors:
         """_VARIANCE_LINE_STYLES base-rate entry (index 1) must use AXIS_RED #97144D."""
         assert app._VARIANCE_LINE_STYLES[1]["color"] == "#97144D"
 
-    def test_variance_line_styles_lower_rate_uses_axis_red_light(self) -> None:
-        """_VARIANCE_LINE_STYLES lower-rate entry (index 0) must use AXIS_RED_LIGHT #C41E5B."""
-        assert app._VARIANCE_LINE_STYLES[0]["color"] == "#C41E5B"
+    def test_variance_line_styles_lower_rate_uses_axis_gold(self) -> None:
+        """_VARIANCE_LINE_STYLES lower-rate entry (index 0) must use Axis gold #F7B500 for bold contrast."""
+        assert app._VARIANCE_LINE_STYLES[0]["color"] == "#F7B500"
 
-    def test_variance_line_styles_upper_rate_uses_axis_red_dark(self) -> None:
-        """_VARIANCE_LINE_STYLES upper-rate entry (index 2) must use AXIS_RED_DARK #6B0F38."""
-        assert app._VARIANCE_LINE_STYLES[2]["color"] == "#6B0F38"
+    def test_variance_line_styles_upper_rate_uses_axis_bright_red(self) -> None:
+        """_VARIANCE_LINE_STYLES upper-rate entry (index 2) must use Axis bright red #E31837."""
+        assert app._VARIANCE_LINE_STYLES[2]["color"] == "#E31837"
 
     def test_variance_line_styles_count_unchanged(self) -> None:
         """_VARIANCE_LINE_STYLES must still contain exactly 3 entries."""
@@ -871,12 +871,12 @@ class TestAxisBankChartColors:
             assert "fill" in style, f"Entry {i} missing 'fill' key"
 
     def test_variance_line_styles_fill_colors_reference_axis_palette(self) -> None:
-        """Fill RGBA values in _VARIANCE_LINE_STYLES must reference Axis Bank RGB components."""
-        # AXIS_RED_LIGHT: rgb(196, 30, 91), AXIS_RED: rgb(151, 20, 77), AXIS_RED_DARK: rgb(107, 15, 56)
+        """Fill RGBA values in _VARIANCE_LINE_STYLES must reference Axis Bank brand RGB components."""
+        # Index 0: Axis gold rgb(247, 181, 0), Index 1: AXIS_RED rgb(151, 20, 77), Index 2: bright red rgb(227, 24, 55)
         expected_fills = [
-            ("196", "30", "91"),   # AXIS_RED_LIGHT
-            ("151", "20", "77"),   # AXIS_RED
-            ("107", "15", "56"),   # AXIS_RED_DARK
+            ("247", "181", "0"),    # Axis gold
+            ("151", "20", "77"),    # AXIS_RED
+            ("227", "24", "55"),    # Axis bright red
         ]
         for i, (r, g, b) in enumerate(expected_fills):
             fill = app._VARIANCE_LINE_STYLES[i]["fill"]

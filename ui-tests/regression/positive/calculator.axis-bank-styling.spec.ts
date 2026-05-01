@@ -52,8 +52,10 @@ test.describe("UI Regression Positive - Axis Bank Bold Color Scheme (Issue #27)"
     const compSelect = page.getByLabel("Compounding Frequency");
     await expect(compSelect).toBeVisible();
     await compSelect.click();
-    // Monthly option must still be present
-    await expect(page.getByText("Monthly")).toBeVisible();
+    // Monthly option must still be present — use the virtual dropdown container for precision
+    await expect(
+      page.getByTestId("stSelectboxVirtualDropdown").getByText("Monthly", { exact: true })
+    ).toBeVisible();
   });
 
   test("chart section renders after Axis Bank color injection", async ({
