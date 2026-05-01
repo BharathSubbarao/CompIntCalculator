@@ -16,6 +16,124 @@ def get_plotly_template() -> str:
     return "plotly_dark" if base_theme == "dark" else "plotly_white"
 
 
+# ── Axis Bank brand color palette ─────────────────────────────────────────────
+AXIS_RED = "#97144D"          # Primary deep-red/maroon brand color
+AXIS_RED_DARK = "#6B0F38"     # Darker variant for hover / footer background
+AXIS_RED_LIGHT = "#C41E5B"    # Lighter tint for highlights
+AXIS_ACCENT = "#E8F0F9"       # Light blue-grey page background
+AXIS_WHITE = "#FFFFFF"
+AXIS_TEXT_LIGHT = "#F5F5F5"
+AXIS_TEXT_DARK = "#1A1A1A"
+
+
+def inject_axis_bank_styles() -> None:
+    """Inject CSS to apply the Axis Bank bold color scheme across the app UI."""
+    css = f"""
+    <style>
+        /* ── Page background ── */
+        .stApp {{
+            background-color: {AXIS_ACCENT};
+        }}
+
+        /* ── Top header bar ── */
+        header[data-testid="stHeader"] {{
+            background-color: {AXIS_RED} !important;
+        }}
+
+        /* ── App title rendered via st.title ── */
+        h1 {{
+            color: {AXIS_RED} !important;
+            font-weight: 800 !important;
+            border-bottom: 3px solid {AXIS_RED};
+            padding-bottom: 8px;
+        }}
+
+        /* ── Section headings (st.subheader) ── */
+        h2, h3 {{
+            color: {AXIS_RED_DARK} !important;
+            font-weight: 700 !important;
+        }}
+
+        /* ── Sidebar background and text ── */
+        section[data-testid="stSidebar"] {{
+            background-color: {AXIS_RED} !important;
+        }}
+        section[data-testid="stSidebar"] * {{
+            color: {AXIS_WHITE} !important;
+        }}
+        section[data-testid="stSidebar"] .stSelectbox label,
+        section[data-testid="stSidebar"] .stNumberInput label,
+        section[data-testid="stSidebar"] h1,
+        section[data-testid="stSidebar"] h2,
+        section[data-testid="stSidebar"] h3 {{
+            color: {AXIS_TEXT_LIGHT} !important;
+            font-weight: 600 !important;
+        }}
+        /* Sidebar input fields */
+        section[data-testid="stSidebar"] input,
+        section[data-testid="stSidebar"] .stSelectbox > div > div {{
+            background-color: {AXIS_WHITE} !important;
+            color: {AXIS_TEXT_DARK} !important;
+            border-radius: 4px;
+        }}
+
+        /* ── Metric cards ── */
+        div[data-testid="stMetric"] {{
+            background-color: {AXIS_RED};
+            border-radius: 8px;
+            padding: 16px 20px;
+            color: {AXIS_WHITE};
+        }}
+        div[data-testid="stMetric"] label,
+        div[data-testid="stMetric"] div[data-testid="stMetricLabel"] {{
+            color: {AXIS_TEXT_LIGHT} !important;
+            font-weight: 600 !important;
+        }}
+        div[data-testid="stMetric"] div[data-testid="stMetricValue"] {{
+            color: {AXIS_WHITE} !important;
+            font-weight: 800 !important;
+            font-size: 1.6rem !important;
+        }}
+
+        /* ── Primary buttons ── */
+        .stButton > button {{
+            background-color: {AXIS_RED} !important;
+            color: {AXIS_WHITE} !important;
+            border: none !important;
+            border-radius: 4px !important;
+            font-weight: 700 !important;
+            padding: 8px 20px !important;
+        }}
+        .stButton > button:hover {{
+            background-color: {AXIS_RED_DARK} !important;
+        }}
+
+        /* ── Dataframe / table header ── */
+        thead tr th {{
+            background-color: {AXIS_RED} !important;
+            color: {AXIS_WHITE} !important;
+            font-weight: 700 !important;
+        }}
+
+        /* ── Caption / footer text ── */
+        .stCaption, div[data-testid="stCaptionContainer"] p {{
+            color: {AXIS_RED_DARK} !important;
+            font-weight: 500;
+        }}
+
+        /* ── Footer banner ── */
+        footer {{
+            background-color: {AXIS_RED_DARK} !important;
+            color: {AXIS_TEXT_LIGHT} !important;
+        }}
+        footer a {{
+            color: {AXIS_TEXT_LIGHT} !important;
+        }}
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
+
 # Frequency mapping: single source of truth for dropdown and calculations
 FREQUENCY_OPTIONS = {
     "Annually": 1,
@@ -162,9 +280,9 @@ def build_growth_chart(
                 y=[row["Balance"] for row in money_growth_rows],
                 text=money_hover_values,
                 mode="lines",
-                line={"width": 3, "color": "#1f6feb"},
+                line={"width": 3, "color": AXIS_RED},
                 fill="tozeroy",
-                fillcolor="rgba(31, 111, 235, 0.14)",
+                fillcolor="rgba(151, 20, 77, 0.14)",
                 hovertemplate="Year %{x:.2f}<br>Balance %{text}<extra></extra>",
             )
         ]
@@ -179,11 +297,11 @@ def build_growth_chart(
     return figure
 
 
-# Colors and fill colors for multi-rate variance lines
+# Colors and fill colors for multi-rate variance lines (Axis Bank palette)
 _VARIANCE_LINE_STYLES = [
-    {"color": "#28a745", "fill": "rgba(40, 167, 69, 0.10)"},   # lower rate — green
-    {"color": "#1f6feb", "fill": "rgba(31, 111, 235, 0.14)"},  # base rate  — blue
-    {"color": "#dc3545", "fill": "rgba(220, 53, 69, 0.10)"},   # higher rate — red
+    {"color": "#F7B500", "fill": "rgba(247, 181, 0, 0.12)"},    # lower rate — Axis gold accent
+    {"color": "#97144D", "fill": "rgba(151, 20, 77, 0.14)"},    # base rate  — Axis maroon
+    {"color": "#E31837", "fill": "rgba(227, 24, 55, 0.10)"},    # higher rate — Axis bright red
 ]
 
 
@@ -479,6 +597,7 @@ def render_results(
 
 def main() -> None:
     st.set_page_config(page_title="Compound Interest Calculator", layout="wide")
+    inject_axis_bank_styles()
 
     (
         money_principal,
