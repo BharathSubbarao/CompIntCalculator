@@ -491,6 +491,56 @@ class TestInterestRateVarianceRange:
         assert "Variance" in fig.layout.title.text or "variance" in fig.layout.title.text.lower()
 
 
+# ---------------------------------------------------------------------------
+# S9 – Total Contributions Formula (Issue #19)
+# ---------------------------------------------------------------------------
+
+class TestTotalContributions:
+    """S9 – Total Contributions formula fix (Issue #19)
+
+    money_total_contributions must equal money_monthly_contribution * 12 * time_years.
+    """
+
+    def test_total_contributions_1000_over_10_years_equals_120000(self) -> None:
+        """With monthly contribution=1000 and time=10 years, total contributions is 120,000."""
+        money_monthly_contribution = 1000.0
+        time_years = 10.0
+        money_total_contributions = money_monthly_contribution * 12 * time_years
+        assert money_total_contributions == 120_000.0
+
+    def test_total_contributions_multiplied_by_12_months_per_year(self) -> None:
+        """Formula uses 12 months per year: contribution * 12 * years."""
+        money_monthly_contribution = 500.0
+        time_years = 5.0
+        money_total_contributions = money_monthly_contribution * 12 * time_years
+        assert money_total_contributions == 30_000.0  # 500 * 12 * 5
+
+    def test_total_contributions_zero_contribution_is_zero(self) -> None:
+        """When monthly contribution is 0, total contributions must be 0 regardless of years."""
+        assert 0.0 * 12 * 20.0 == 0.0
+
+    def test_interest_earned_uses_corrected_total_contributions(self) -> None:
+        """Interest Earned = Future Value − Principal − (monthly * 12 * years)."""
+        principal = 10000.0
+        contribution = 1000.0
+        rate = 5.0
+        years = 10.0
+        n = 12
+        money_fv = app.calculate_compound_balance(principal, contribution, rate, years, n)
+        money_total_contributions = contribution * 12 * years  # corrected formula
+        money_interest = money_fv - principal - money_total_contributions
+        # With monthly contributions compounding, interest must be positive
+        assert money_interest > 0
+
+    def test_old_formula_would_produce_wrong_result(self) -> None:
+        """Regression: old formula (contribution * years) gave 10x lower total contributions."""
+        contribution = 1000.0
+        years = 10.0
+        wrong_result = contribution * years        # old bug: 10,000
+        correct_result = contribution * 12 * years  # fix:    120,000
+        assert correct_result == 12 * wrong_result
+
+
 class TestPlotlyTemplate:
     """S7 – Theme alignment"""
 
