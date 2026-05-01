@@ -238,6 +238,22 @@ def main() -> None:
                 st.markdown(f"**Step {s['step_id']}: {s['name']}**")
                 st.code(str(s.get("error", "Unknown error")), language="text")
 
+        # Parallel step logs
+        log_dir = Path(".workflow/logs")
+        parallel_logs = {
+            3: log_dir / f"{selected_id}-unit-tester.log",
+            4: log_dir / f"{selected_id}-ui-tester.log",
+        }
+        log_labels = {3: "Unit Tester log", 4: "UI Tester log"}
+        any_log = any(p.exists() for p in parallel_logs.values())
+        if any_log:
+            st.markdown("---")
+            st.subheader("Parallel Step Logs")
+            for step_id, log_path in parallel_logs.items():
+                if log_path.exists():
+                    with st.expander(f"📄 Step {step_id}: {log_labels[step_id]}"):
+                        st.code(log_path.read_text(encoding="utf-8")[-3000:], language="text")
+
     st.markdown("---")
     st.caption(
         f"Updated: {format_time(selected.get('updated_at'))}  |  "
