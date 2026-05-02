@@ -38,6 +38,9 @@ You are an expert Python developer specializing in clean, mathematical web appli
 
 ## 🎨 UI & Styling
 - **Default State**: Set the default theme to match the user's system settings.
+- **Design System**: Full color palette, typography, layout, and component styling rules are defined in
+  [`.github/instructions/ui-design.instructions.md`](.github/instructions/ui-design.instructions.md).
+  Always consult that file before making any UI changes.
 
 
 ## ⚠️ Boundaries & Rules
