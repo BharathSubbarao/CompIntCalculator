@@ -8,7 +8,7 @@ from typing import Any
 import streamlit as st
 import streamlit.components.v1 as components
 
-STATE_DIR = Path(__file__).parent.parent / ".workflow" / "state"
+STATE_DIR = Path(__file__).resolve().parent.parent / ".workflow" / "state"
 
 STATUS_ICON = {
     "PENDING": "⬜",
@@ -246,7 +246,7 @@ def main() -> None:
 
     workflows = load_workflows()
     if not workflows:
-        st.info("No workflow state files found in .workflow/state/")
+        st.info(f"No workflow state files found in `{STATE_DIR}`")
         st.stop()
 
     # Workflow selector
