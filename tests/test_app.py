@@ -1080,3 +1080,99 @@ class TestParallelTestingScript:
         assert "background" in content.lower() or "parallel" in content.lower(), (
             "orchestrator.agent.md must describe Steps 3+4 as running in parallel / background."
         )
+
+
+# ---------------------------------------------------------------------------
+# S13 – Chart title font color explicitly set to THEME_TEXT_PRIMARY (Issue #33)
+# ---------------------------------------------------------------------------
+
+class TestChartTitleFontColor:
+    """S13 – Chart title font.color must be explicitly set to THEME_TEXT_PRIMARY (#FFFFFF)
+    so the title is visible on dark backgrounds and not left to the template default.
+    """
+
+    def _make_rows(self) -> list:
+        return [
+            {"Years": 0.0,  "Balance": 10000.0},
+            {"Years": 5.0,  "Balance": 13500.0},
+            {"Years": 10.0, "Balance": 18000.0},
+        ]
+
+    def _make_multi_series(self) -> list:
+        rows = self._make_rows()
+        return [
+            {"label": "4.00%", "growth_rows": rows},
+            {"label": "5.00% (base)", "growth_rows": rows},
+            {"label": "6.00%", "growth_rows": rows},
+        ]
+
+    # --- build_growth_chart ---
+
+    def test_growth_chart_title_font_color_is_explicitly_set(self) -> None:
+        """build_growth_chart: title font color must not be None or empty (Issue #33)."""
+        fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
+        color = fig.layout.title.font.color
+        assert color is not None and color != "", (
+            "build_growth_chart title font.color must be explicitly set, "
+            "not left to the template default."
+        )
+
+    def test_growth_chart_title_font_color_matches_theme_text_primary(self) -> None:
+        """build_growth_chart: title font color must equal THEME_TEXT_PRIMARY (#FFFFFF) (Issue #33)."""
+        fig = app.build_growth_chart(self._make_rows(), "$", "USD")
+        assert fig.layout.title.font.color == app.THEME_TEXT_PRIMARY, (
+            f"Expected title font.color == {app.THEME_TEXT_PRIMARY!r}, "
+            f"got {fig.layout.title.font.color!r}."
+        )
+
+    def test_growth_chart_title_font_color_is_white_hex(self) -> None:
+        """build_growth_chart: title font color must be exactly #FFFFFF (Issue #33)."""
+        fig = app.build_growth_chart(self._make_rows(), "€", "EUR")
+        assert fig.layout.title.font.color == "#FFFFFF", (
+            "build_growth_chart title font.color must be '#FFFFFF' for visibility on dark bg."
+        )
+
+    def test_growth_chart_title_text_unchanged(self) -> None:
+        """build_growth_chart: adding font.color must not alter the title text (Issue #33)."""
+        fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
+        assert fig.layout.title.text == "Compound Growth Over Time", (
+            "build_growth_chart title text must remain 'Compound Growth Over Time'."
+        )
+
+    def test_growth_chart_axes_unaffected_by_title_font_color_change(self) -> None:
+        """build_growth_chart: axis titles must still be set correctly after Issue #33 change."""
+        fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
+        assert fig.layout.xaxis.title.text == "Years"
+        assert "₹" in fig.layout.yaxis.title.text
+
+    # --- build_multi_rate_growth_chart ---
+
+    def test_variance_chart_title_font_color_is_explicitly_set(self) -> None:
+        """build_multi_rate_growth_chart: title font color must not be None or empty (Issue #33)."""
+        fig = app.build_multi_rate_growth_chart(self._make_multi_series(), "₹", "INR")
+        color = fig.layout.title.font.color
+        assert color is not None and color != "", (
+            "build_multi_rate_growth_chart title font.color must be explicitly set."
+        )
+
+    def test_variance_chart_title_font_color_matches_theme_text_primary(self) -> None:
+        """build_multi_rate_growth_chart: title font color must equal THEME_TEXT_PRIMARY (Issue #33)."""
+        fig = app.build_multi_rate_growth_chart(self._make_multi_series(), "$", "USD")
+        assert fig.layout.title.font.color == app.THEME_TEXT_PRIMARY, (
+            f"Expected variance chart title font.color == {app.THEME_TEXT_PRIMARY!r}, "
+            f"got {fig.layout.title.font.color!r}."
+        )
+
+    def test_variance_chart_title_font_color_is_white_hex(self) -> None:
+        """build_multi_rate_growth_chart: title font color must be exactly #FFFFFF (Issue #33)."""
+        fig = app.build_multi_rate_growth_chart(self._make_multi_series(), "€", "EUR")
+        assert fig.layout.title.font.color == "#FFFFFF", (
+            "build_multi_rate_growth_chart title font.color must be '#FFFFFF'."
+        )
+
+    def test_variance_chart_title_text_unchanged(self) -> None:
+        """build_multi_rate_growth_chart: font.color change must not alter title text (Issue #33)."""
+        fig = app.build_multi_rate_growth_chart(self._make_multi_series(), "$", "USD")
+        assert "Interest Rate Variance" in fig.layout.title.text, (
+            "Variance chart title text must still reference 'Interest Rate Variance'."
+        )
