@@ -156,6 +156,13 @@ def inject_app_styles() -> None:
         footer a {{
             color: {THEME_GREEN} !important;
         }}
+
+        /* ── Number input +/- buttons always visible ── */
+        button[data-testid="stNumberInputStepUp"],
+        button[data-testid="stNumberInputStepDown"] {{
+            opacity: 1 !important;
+            visibility: visible !important;
+        }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
