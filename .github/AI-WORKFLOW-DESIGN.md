@@ -15,7 +15,7 @@ User Chat
     │
     ▼
 ┌─────────────────────────┐
-│  issue-workflow.agent   │  ← Orchestrator (coordinates only, implements nothing)
+│  orchestrator.agent     │  ← Orchestrator (coordinates only, implements nothing)
 └────────────┬────────────┘
              │
      ┌───────▼────────┐
@@ -46,7 +46,7 @@ User Chat
 
 | File | Role | Gate |
 |------|------|------|
-| `issue-workflow.agent.md` | **Orchestrator** — manages pipeline, state, BLOCK propagation | — |
+| `orchestrator.agent.md` | **Orchestrator** — manages pipeline, state, BLOCK propagation | — |
 | `product-owner.agent.md` | Refines raw issue into structured template with acceptance criteria | Gate 0 |
 | `developer.agent.md` | Implements feature change in `app.py` | Gate 1 |
 | `unit-tester.agent.md` | Writes/runs pytest unit tests in `tests/test_app.py` | Gate 2 |

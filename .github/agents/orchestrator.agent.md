@@ -1,5 +1,5 @@
 ---
-name: issue-workflow
+name: orchestrator
 description: "Orchestrator: runs the end-to-end issue workflow for CompIntCalculator by invoking 5 specialist subagents. Steps 3 and 4 run in parallel. Trigger with: Start work on git issue #<N>"
 ---
 
