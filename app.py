@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import ceil, floor, isclose, log10
+from math import floor, isclose, log10
 
 import numpy  # noqa: F401
 import pandas as pd
@@ -376,45 +376,54 @@ def build_yearly_summary(
     return money_summary_rows
 
 
-def _yaxis_tick_config(max_balance: float, currency_code: str) -> dict:
-    """Return Plotly yaxis tick configuration for the Compound Growth chart.
+def _build_yaxis_tick_config(max_balance: float, currency_code: str) -> dict:
+    """Return Plotly yaxis tick overrides based on currency and data magnitude.
 
-    For INR, ticks are displayed in lakhs (L) or crores (Cr) depending on scale.
-    For all other currencies, ticks are displayed in millions (M).
-    Returns an empty dict when the max balance is below the threshold for unit conversion.
+    For INR the axis uses Indian units — lakhs (L) or crores (Cr).
+    For all other currencies the axis uses millions (M).
+    Returns an empty dict when the values are too small to warrant scaling.
     """
-    LAKH = 100_000
-    CRORE = 10_000_000
-    MILLION = 1_000_000
-
-    def _make_ticks(max_val: float, unit: float, suffix: str) -> dict:
-        max_in_unit = max_val / unit
-        raw_step = max_in_unit / 5
-        if raw_step <= 0:
-            return {}
-        mag = 10 ** floor(log10(raw_step))
-        nice_step = ceil(raw_step / mag) * mag
-        tick_vals: list[float] = [0.0]
-        tick_text: list[str] = ["0"]
-        v = nice_step * unit
-        while v <= max_val * 1.1:
-            tick_vals.append(v)
-            n = v / unit
-            label = f"{n:.0f}{suffix}" if n == int(n) else f"{n:.1f}{suffix}"
-            tick_text.append(label)
-            v += nice_step * unit
-        return {"tickvals": tick_vals, "ticktext": tick_text}
+    if max_balance <= 0:
+        return {}
 
     if currency_code == "INR":
-        if max_balance >= CRORE:
-            return _make_ticks(max_balance, CRORE, " Cr")
-        if max_balance >= LAKH:
-            return _make_ticks(max_balance, LAKH, " L")
-        return {}
+        ONE_LAKH = 100_000
+        ONE_CRORE = 10_000_000
+        if max_balance >= ONE_CRORE:
+            divisor = ONE_CRORE
+            unit_label = "Cr"
+        elif max_balance >= ONE_LAKH:
+            divisor = ONE_LAKH
+            unit_label = "L"
+        else:
+            return {}
     else:
-        if max_balance >= MILLION:
-            return _make_ticks(max_balance, MILLION, " M")
-        return {}
+        ONE_MILLION = 1_000_000
+        if max_balance >= ONE_MILLION:
+            divisor = ONE_MILLION
+            unit_label = "M"
+        else:
+            return {}
+
+    # Generate ~5 evenly-spaced ticks from 0 to max_balance
+    scaled_max = max_balance / divisor
+    raw_step = scaled_max / 5
+    magnitude = 10 ** floor(log10(raw_step)) if raw_step > 0 else 1
+    nice_steps = [magnitude, 2 * magnitude, 5 * magnitude, 10 * magnitude]
+    step_scaled = min(nice_steps, key=lambda s: abs(s - raw_step))
+    step_raw = step_scaled * divisor
+
+    tickvals: list[float] = []
+    ticktext: list[str] = []
+    v = 0.0
+    while v <= max_balance * 1.05:
+        tickvals.append(v)
+        sv = v / divisor
+        label = f"{int(sv)} {unit_label}" if sv == int(sv) else f"{sv:.2f} {unit_label}"
+        ticktext.append(label)
+        v += step_raw
+
+    return {"tickvals": tickvals, "ticktext": ticktext}
 
 
 def build_growth_chart(
@@ -430,6 +439,9 @@ def build_growth_chart(
         )
         for row in money_growth_rows
     ]
+    max_balance = max((row["Balance"] for row in money_growth_rows), default=0.0)
+    yaxis_tick_cfg = _build_yaxis_tick_config(max_balance, money_currency_code)
+
     figure = go.Figure(
         data=[
             go.Scatter(
@@ -444,13 +456,11 @@ def build_growth_chart(
             )
         ]
     )
-    max_balance = max((row["Balance"] for row in money_growth_rows), default=0)
-    yaxis_cfg: dict = {"title": f"Balance ({money_currency_symbol})"}
-    yaxis_cfg.update(_yaxis_tick_config(max_balance, money_currency_code))
     figure.update_layout(
         title={"text": "Compound Growth Over Time", "font": {"color": THEME_TEXT_PRIMARY}},
         xaxis_title="Years",
-        yaxis=yaxis_cfg,
+        yaxis_title=f"Balance ({money_currency_symbol})",
+        yaxis=yaxis_tick_cfg if yaxis_tick_cfg else {},
         template="plotly_dark",
         paper_bgcolor=THEME_CARD,
         plot_bgcolor=THEME_BG,
@@ -504,16 +514,18 @@ def build_multi_rate_growth_chart(
         )
 
     figure = go.Figure(data=traces)
+
     max_balance = max(
         (row["Balance"] for series in rate_series for row in series["growth_rows"]),
-        default=0,
+        default=0.0,
     )
-    multi_yaxis_cfg: dict = {"title": f"Balance ({money_currency_symbol})"}
-    multi_yaxis_cfg.update(_yaxis_tick_config(max_balance, money_currency_code))
+    yaxis_tick_cfg = _build_yaxis_tick_config(max_balance, money_currency_code)
+
     figure.update_layout(
         title={"text": "Compound Growth Over Time — Interest Rate Variance", "font": {"color": THEME_TEXT_PRIMARY}},
         xaxis_title="Years",
-        yaxis=multi_yaxis_cfg,
+        yaxis_title=f"Balance ({money_currency_symbol})",
+        yaxis=yaxis_tick_cfg if yaxis_tick_cfg else {},
         template="plotly_dark",
         paper_bgcolor=THEME_CARD,
         plot_bgcolor=THEME_BG,
