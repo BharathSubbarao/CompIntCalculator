@@ -695,12 +695,18 @@ def render_results(
         )
     else:
         money_balance_column = f"Balance ({money_currency_symbol})"
-        numeric_rows = []
+        display_rows = []
         for money_row in money_summary_rows:
-            money_row[money_balance_column] = float(money_row.pop("Balance ($)"))
-            numeric_rows.append(money_row)
+            display_rows.append({
+                "Period": money_row["Period"],
+                money_balance_column: format_money_value(
+                    float(money_row["Balance ($)"]),
+                    money_currency_symbol,
+                    money_currency_code,
+                ),
+            })
         st.dataframe(
-            style_summary_dataframe(numeric_rows, balance_columns=[money_balance_column]),
+            style_summary_dataframe(display_rows, balance_columns=[]),
             use_container_width=True,
             hide_index=True,
         )
