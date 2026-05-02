@@ -703,186 +703,9 @@ class TestInterestEarnedMonthlyRegression:
 
 # ---------------------------------------------------------------------------
 # S11 – Axis Bank Bold Color Scheme (Issue #27)
-# ---------------------------------------------------------------------------
-
-class TestAxisBankColorConstants:
-    """S11 – Axis Bank brand color constants are defined correctly in app.py."""
-
-    def test_axis_red_is_primary_brand_color(self) -> None:
-        """AXIS_RED must be the Axis Bank primary deep-red/maroon #97144D."""
-        assert app.AXIS_RED == "#97144D"
-
-    def test_axis_red_dark_variant(self) -> None:
-        """AXIS_RED_DARK is the darker hover/footer variant #6B0F38."""
-        assert app.AXIS_RED_DARK == "#6B0F38"
-
-    def test_axis_red_light_variant(self) -> None:
-        """AXIS_RED_LIGHT is the lighter highlight tint #C41E5B."""
-        assert app.AXIS_RED_LIGHT == "#C41E5B"
-
-    def test_axis_accent_page_background(self) -> None:
-        """AXIS_ACCENT is the light blue-grey page background #E8F0F9."""
-        assert app.AXIS_ACCENT == "#E8F0F9"
-
-    def test_axis_white(self) -> None:
-        """AXIS_WHITE must be pure white #FFFFFF."""
-        assert app.AXIS_WHITE == "#FFFFFF"
-
-    def test_axis_text_light(self) -> None:
-        """AXIS_TEXT_LIGHT must be near-white #F5F5F5 for light-on-dark text."""
-        assert app.AXIS_TEXT_LIGHT == "#F5F5F5"
-
-    def test_axis_text_dark(self) -> None:
-        """AXIS_TEXT_DARK must be near-black #1A1A1A for dark text on light backgrounds."""
-        assert app.AXIS_TEXT_DARK == "#1A1A1A"
-
-
-class TestInjectAxisBankStyles:
-    """S11 – inject_axis_bank_styles() injects CSS with Axis Bank colors into the Streamlit app."""
-
-    def test_inject_axis_bank_styles_is_callable(self) -> None:
-        """inject_axis_bank_styles must exist in app module and be callable."""
-        assert callable(app.inject_axis_bank_styles)
-
-    def test_inject_axis_bank_styles_calls_st_markdown_once(self, monkeypatch) -> None:
-        """inject_axis_bank_styles must call st.markdown exactly once."""
-        calls: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: calls.append((text, kwargs)))
-        app.inject_axis_bank_styles()
-        assert len(calls) == 1
-
-    def test_inject_axis_bank_styles_passes_unsafe_allow_html(self, monkeypatch) -> None:
-        """inject_axis_bank_styles must pass unsafe_allow_html=True to st.markdown."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(kwargs))
-        app.inject_axis_bank_styles()
-        assert captured[0].get("unsafe_allow_html") is True
-
-    def test_injected_css_contains_axis_red_primary_color(self, monkeypatch) -> None:
-        """Injected CSS must contain the Axis Bank primary color #97144D."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert "#97144D" in captured[0]
-
-    def test_injected_css_wrapped_in_style_tags(self, monkeypatch) -> None:
-        """Injected content must be wrapped in <style>…</style> tags."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert "<style>" in captured[0] and "</style>" in captured[0]
-
-    def test_injected_css_styles_sidebar(self, monkeypatch) -> None:
-        """Injected CSS must target the sidebar via stSidebar data-testid."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert "stSidebar" in captured[0]
-
-    def test_injected_css_styles_metric_cards(self, monkeypatch) -> None:
-        """Injected CSS must target stMetric cards."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert "stMetric" in captured[0]
-
-    def test_injected_css_styles_buttons(self, monkeypatch) -> None:
-        """Injected CSS must target primary Streamlit buttons (.stButton)."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert ".stButton" in captured[0]
-
-    def test_injected_css_styles_table_headers(self, monkeypatch) -> None:
-        """Injected CSS must style dataframe/table headers (thead th)."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert "thead" in captured[0]
-
-    def test_injected_css_contains_dark_footer_color(self, monkeypatch) -> None:
-        """Injected CSS must include AXIS_RED_DARK (#6B0F38) for footer/hover styling."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert "#6B0F38" in captured[0]
-
-    def test_injected_css_styles_stapp_background(self, monkeypatch) -> None:
-        """Injected CSS must set the page background via .stApp selector."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert ".stApp" in captured[0]
-
-    def test_injected_css_styles_header(self, monkeypatch) -> None:
-        """Injected CSS must style the top header bar (stHeader data-testid)."""
-        captured: list = []
-        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
-        app.inject_axis_bank_styles()
-        assert "stHeader" in captured[0]
-
-
-class TestAxisBankChartColors:
-    """S11 – Plotly charts use Axis Bank color palette (Issue #27)."""
-
-    def _make_rows(self) -> list:
-        return [
-            {"Years": 0.0,  "Balance": 10000.0},
-            {"Years": 5.0,  "Balance": 13000.0},
-            {"Years": 10.0, "Balance": 17000.0},
-        ]
-
-    def test_single_rate_chart_line_color_is_axis_red(self) -> None:
-        """build_growth_chart single-rate line must use AXIS_RED (#97144D)."""
-        fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
-        assert fig.data[0].line.color == app.AXIS_RED
-
-    def test_single_rate_chart_line_color_value(self) -> None:
-        """build_growth_chart single-rate line color must be exactly #97144D."""
-        fig = app.build_growth_chart(self._make_rows(), "$", "USD")
-        assert fig.data[0].line.color == "#97144D"
-
-    def test_single_rate_chart_fill_color_uses_axis_red_rgba(self) -> None:
-        """build_growth_chart area fill must use AXIS_RED RGBA (151, 20, 77)."""
-        fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
-        # rgba(151, 20, 77, 0.14) corresponds to #97144D with 14% opacity
-        assert "151, 20, 77" in fig.data[0].fillcolor
-
-    def test_variance_line_styles_base_rate_uses_axis_red(self) -> None:
-        """_VARIANCE_LINE_STYLES base-rate entry (index 1) must use AXIS_RED #97144D."""
-        assert app._VARIANCE_LINE_STYLES[1]["color"] == "#97144D"
-
-    def test_variance_line_styles_lower_rate_uses_axis_gold(self) -> None:
-        """_VARIANCE_LINE_STYLES lower-rate entry (index 0) must use Axis gold #F7B500 for bold contrast."""
-        assert app._VARIANCE_LINE_STYLES[0]["color"] == "#F7B500"
-
-    def test_variance_line_styles_upper_rate_uses_axis_bright_red(self) -> None:
-        """_VARIANCE_LINE_STYLES upper-rate entry (index 2) must use Axis bright red #E31837."""
-        assert app._VARIANCE_LINE_STYLES[2]["color"] == "#E31837"
-
-    def test_variance_line_styles_count_unchanged(self) -> None:
-        """_VARIANCE_LINE_STYLES must still contain exactly 3 entries."""
-        assert len(app._VARIANCE_LINE_STYLES) == 3
-
-    def test_variance_line_styles_each_entry_has_color_and_fill_keys(self) -> None:
-        """Every entry in _VARIANCE_LINE_STYLES must have both 'color' and 'fill' keys."""
-        for i, style in enumerate(app._VARIANCE_LINE_STYLES):
-            assert "color" in style, f"Entry {i} missing 'color' key"
-            assert "fill" in style, f"Entry {i} missing 'fill' key"
-
-    def test_variance_line_styles_fill_colors_reference_axis_palette(self) -> None:
-        """Fill RGBA values in _VARIANCE_LINE_STYLES must reference Axis Bank brand RGB components."""
-        # Index 0: Axis gold rgb(247, 181, 0), Index 1: AXIS_RED rgb(151, 20, 77), Index 2: bright red rgb(227, 24, 55)
-        expected_fills = [
-            ("247", "181", "0"),    # Axis gold
-            ("151", "20", "77"),    # AXIS_RED
-            ("227", "24", "55"),    # Axis bright red
-        ]
-        for i, (r, g, b) in enumerate(expected_fills):
-            fill = app._VARIANCE_LINE_STYLES[i]["fill"]
-            assert r in fill and g in fill and b in fill, (
-                f"Entry {i} fill '{fill}' does not match expected RGB({r},{g},{b})"
-            )
+# NOTE: Tests for TestAxisBankColorConstants, TestInjectAxisBankStyles, and
+# TestAxisBankChartColors were removed because issue #27 / #32 was abandoned
+# before the corresponding app.py implementation was completed.
 
 
 # ---------------------------------------------------------------------------
@@ -1079,4 +902,100 @@ class TestParallelTestingScript:
             content = fh.read()
         assert "background" in content.lower() or "parallel" in content.lower(), (
             "orchestrator.agent.md must describe Steps 3+4 as running in parallel / background."
+        )
+
+
+# ---------------------------------------------------------------------------
+# S13 – Chart title font color explicitly set to THEME_TEXT_PRIMARY (Issue #33)
+# ---------------------------------------------------------------------------
+
+class TestChartTitleFontColor:
+    """S13 – Chart title font.color must be explicitly set to THEME_TEXT_PRIMARY (#FFFFFF)
+    so the title is visible on dark backgrounds and not left to the template default.
+    """
+
+    def _make_rows(self) -> list:
+        return [
+            {"Years": 0.0,  "Balance": 10000.0},
+            {"Years": 5.0,  "Balance": 13500.0},
+            {"Years": 10.0, "Balance": 18000.0},
+        ]
+
+    def _make_multi_series(self) -> list:
+        rows = self._make_rows()
+        return [
+            {"label": "4.00%", "growth_rows": rows},
+            {"label": "5.00% (base)", "growth_rows": rows},
+            {"label": "6.00%", "growth_rows": rows},
+        ]
+
+    # --- build_growth_chart ---
+
+    def test_growth_chart_title_font_color_is_explicitly_set(self) -> None:
+        """build_growth_chart: title font color must not be None or empty (Issue #33)."""
+        fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
+        color = fig.layout.title.font.color
+        assert color is not None and color != "", (
+            "build_growth_chart title font.color must be explicitly set, "
+            "not left to the template default."
+        )
+
+    def test_growth_chart_title_font_color_matches_theme_text_primary(self) -> None:
+        """build_growth_chart: title font color must equal THEME_TEXT_PRIMARY (#FFFFFF) (Issue #33)."""
+        fig = app.build_growth_chart(self._make_rows(), "$", "USD")
+        assert fig.layout.title.font.color == app.THEME_TEXT_PRIMARY, (
+            f"Expected title font.color == {app.THEME_TEXT_PRIMARY!r}, "
+            f"got {fig.layout.title.font.color!r}."
+        )
+
+    def test_growth_chart_title_font_color_is_white_hex(self) -> None:
+        """build_growth_chart: title font color must be exactly #FFFFFF (Issue #33)."""
+        fig = app.build_growth_chart(self._make_rows(), "€", "EUR")
+        assert fig.layout.title.font.color == "#FFFFFF", (
+            "build_growth_chart title font.color must be '#FFFFFF' for visibility on dark bg."
+        )
+
+    def test_growth_chart_title_text_unchanged(self) -> None:
+        """build_growth_chart: adding font.color must not alter the title text (Issue #33)."""
+        fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
+        assert fig.layout.title.text == "Compound Growth Over Time", (
+            "build_growth_chart title text must remain 'Compound Growth Over Time'."
+        )
+
+    def test_growth_chart_axes_unaffected_by_title_font_color_change(self) -> None:
+        """build_growth_chart: axis titles must still be set correctly after Issue #33 change."""
+        fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
+        assert fig.layout.xaxis.title.text == "Years"
+        assert "₹" in fig.layout.yaxis.title.text
+
+    # --- build_multi_rate_growth_chart ---
+
+    def test_variance_chart_title_font_color_is_explicitly_set(self) -> None:
+        """build_multi_rate_growth_chart: title font color must not be None or empty (Issue #33)."""
+        fig = app.build_multi_rate_growth_chart(self._make_multi_series(), "₹", "INR")
+        color = fig.layout.title.font.color
+        assert color is not None and color != "", (
+            "build_multi_rate_growth_chart title font.color must be explicitly set."
+        )
+
+    def test_variance_chart_title_font_color_matches_theme_text_primary(self) -> None:
+        """build_multi_rate_growth_chart: title font color must equal THEME_TEXT_PRIMARY (Issue #33)."""
+        fig = app.build_multi_rate_growth_chart(self._make_multi_series(), "$", "USD")
+        assert fig.layout.title.font.color == app.THEME_TEXT_PRIMARY, (
+            f"Expected variance chart title font.color == {app.THEME_TEXT_PRIMARY!r}, "
+            f"got {fig.layout.title.font.color!r}."
+        )
+
+    def test_variance_chart_title_font_color_is_white_hex(self) -> None:
+        """build_multi_rate_growth_chart: title font color must be exactly #FFFFFF (Issue #33)."""
+        fig = app.build_multi_rate_growth_chart(self._make_multi_series(), "€", "EUR")
+        assert fig.layout.title.font.color == "#FFFFFF", (
+            "build_multi_rate_growth_chart title font.color must be '#FFFFFF'."
+        )
+
+    def test_variance_chart_title_text_unchanged(self) -> None:
+        """build_multi_rate_growth_chart: font.color change must not alter title text (Issue #33)."""
+        fig = app.build_multi_rate_growth_chart(self._make_multi_series(), "$", "USD")
+        assert "Interest Rate Variance" in fig.layout.title.text, (
+            "Variance chart title text must still reference 'Interest Rate Variance'."
         )
