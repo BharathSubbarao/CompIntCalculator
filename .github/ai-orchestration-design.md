@@ -99,7 +99,7 @@ PENDING → IN_PROGRESS → COMPLETED
                       ↘ BLOCKED  (stops the pipeline)
 ```
 
-Managed by `scripts/update_workflow_state.py`:
+Managed by `scripts/update_orchestration_state.py`:
 
 | Command | Purpose |
 |---------|---------|
@@ -126,11 +126,11 @@ Every gate is enforced inside the owning subagent. A failure raises a BLOCKED st
 
 ## Dashboard
 
-`scripts/workflow_dashboard.py` (Streamlit) reads state JSON files and renders the live pipeline.
+`scripts/ai_orchestration_dashboard.py` (Streamlit) reads state JSON files and renders the live pipeline.
 
 - **Left panel** — pipeline visualization with parallel lane (Steps 3+4 side-by-side)
 - **Right panel** — step detail inspector, blocked error messages, collapsible log viewers
 - **Status icons** — ⬜ PENDING · 🟡 IN_PROGRESS · ✅ COMPLETED · 🔴 BLOCKED
 - **Auto-refresh** — JavaScript `setTimeout`, default every 5 seconds
 
-Run: `python3 -m streamlit run scripts/workflow_dashboard.py`
+Run: `python3 -m streamlit run scripts/ai_orchestration_dashboard.py`

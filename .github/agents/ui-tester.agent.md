@@ -15,7 +15,7 @@ You are the **UI Tester specialist**. Your sole responsibility is to write Playw
 
 ### 1. Mark Step IN_PROGRESS
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 4 --status IN_PROGRESS
 ```
 ✅ Confirm `[OK]` before continuing.
@@ -38,7 +38,7 @@ git diff origin/main -- ui-tests/
 
 If the diff is empty (no new or modified Playwright specs):
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 4 --status BLOCKED \
   --error "Gate 3 BLOCKED: No Playwright regression spec was added or modified for this feature in ui-tests/."
 ```
@@ -55,7 +55,7 @@ git commit -m "[Issue #<issue_number>] Add Playwright regression spec for <featu
 
 ### 6. Mark Step COMPLETED
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 4 --status COMPLETED
 ```
 ✅ Confirm `[OK]`.

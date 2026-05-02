@@ -20,7 +20,7 @@ mkdir -p "${LOG_DIR}"
 UNIT_LOG="${LOG_DIR}/${WORKFLOW_ID}-unit-tester.log"
 UI_LOG="${LOG_DIR}/${WORKFLOW_ID}-ui-tester.log"
 
-STATE_SCRIPT="python3 scripts/update_workflow_state.py"
+STATE_SCRIPT="python3 scripts/update_orchestration_state.py"
 
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
 
@@ -47,7 +47,7 @@ run_unit_tests() {
     if [ -z "${UNIT_DIFF}" ]; then
       MSG="Gate 2 BLOCKED: No unit test was added or modified for this feature in tests/test_app.py."
       echo "[GATE 2 FAIL] ${MSG}"
-      python3 scripts/update_workflow_state.py \
+      python3 scripts/update_orchestration_state.py \
         --workflow-id "${wf_id}" --parallel-step unit_test_run --status BLOCKED \
         --error "${MSG}"
       echo "===== STEP 3 BLOCKED $(ts) ====="
@@ -63,7 +63,7 @@ run_unit_tests() {
     if [ "${PYTEST_EXIT}" -ne 0 ]; then
       MSG="Gate 2 BLOCKED: Unit tests failed (exit ${PYTEST_EXIT}). Fix all failures before proceeding."
       echo "[GATE 2 FAIL] ${MSG}"
-      python3 scripts/update_workflow_state.py \
+      python3 scripts/update_orchestration_state.py \
         --workflow-id "${wf_id}" --parallel-step unit_test_run --status BLOCKED \
         --error "${MSG}"
       echo "===== STEP 3 BLOCKED $(ts) ====="
@@ -71,7 +71,7 @@ run_unit_tests() {
     fi
 
     echo "[GATE 2 OK] All unit tests passed."
-    python3 scripts/update_workflow_state.py \
+    python3 scripts/update_orchestration_state.py \
       --workflow-id "${wf_id}" --parallel-step unit_test_run --status COMPLETED
     echo "===== STEP 3 COMPLETED $(ts) ====="
     exit 0
@@ -93,7 +93,7 @@ run_ui_tests() {
     if [ -z "${UI_DIFF}" ]; then
       MSG="Gate 3 BLOCKED: No Playwright regression spec was added or modified for this feature in ui-tests/."
       echo "[GATE 3 FAIL] ${MSG}"
-      python3 scripts/update_workflow_state.py \
+      python3 scripts/update_orchestration_state.py \
         --workflow-id "${wf_id}" --parallel-step ui_test_run --status BLOCKED \
         --error "${MSG}"
       echo "===== STEP 4 BLOCKED $(ts) ====="
@@ -109,7 +109,7 @@ run_ui_tests() {
     if [ "${PLAYWRIGHT_EXIT}" -ne 0 ]; then
       MSG="Gate 3 BLOCKED: UI regression tests failed (exit ${PLAYWRIGHT_EXIT}). Fix all failures before proceeding."
       echo "[GATE 3 FAIL] ${MSG}"
-      python3 scripts/update_workflow_state.py \
+      python3 scripts/update_orchestration_state.py \
         --workflow-id "${wf_id}" --parallel-step ui_test_run --status BLOCKED \
         --error "${MSG}"
       echo "===== STEP 4 BLOCKED $(ts) ====="
@@ -117,7 +117,7 @@ run_ui_tests() {
     fi
 
     echo "[GATE 3 OK] All UI regression tests passed."
-    python3 scripts/update_workflow_state.py \
+    python3 scripts/update_orchestration_state.py \
       --workflow-id "${wf_id}" --parallel-step ui_test_run --status COMPLETED
     echo "===== STEP 4 COMPLETED $(ts) ====="
     exit 0

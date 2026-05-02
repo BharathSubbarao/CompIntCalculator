@@ -81,5 +81,5 @@ POST http://localhost:8090/workflows/start
 Monitor active workflows with the dashboard:
 
 ```bash
-streamlit run scripts/workflow_dashboard.py
+streamlit run scripts/ai_orchestration_dashboard.py
 ```

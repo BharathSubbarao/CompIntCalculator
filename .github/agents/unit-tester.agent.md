@@ -15,7 +15,7 @@ You are the **Unit Tester specialist**. Your sole responsibility is to write mea
 
 ### 1. Mark Step IN_PROGRESS
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 3 --status IN_PROGRESS
 ```
 ✅ Confirm `[OK]` before continuing.
@@ -38,7 +38,7 @@ git diff origin/main -- tests/test_app.py
 
 If the diff is empty (no new or modified tests):
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 3 --status BLOCKED \
   --error "Gate 2 BLOCKED: No unit test was added or modified for this feature in tests/test_app.py."
 ```
@@ -55,7 +55,7 @@ git commit -m "[Issue #<issue_number>] Add unit tests for <feature keyword>"
 
 ### 6. Mark Step COMPLETED
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 3 --status COMPLETED
 ```
 ✅ Confirm `[OK]`.

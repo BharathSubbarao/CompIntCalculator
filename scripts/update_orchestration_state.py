@@ -4,22 +4,22 @@ Workflow state updater for the AI issue workflow (multi-agent orchestration).
 
 Usage:
   # Create initial state file (all steps PENDING)
-  python3 scripts/update_workflow_state.py --init --workflow-id issue-16-20260501102500 --issue-number 16
+  python3 scripts/update_orchestration_state.py --init --workflow-id issue-16-20260501102500 --issue-number 16
 
   # Mark a step IN_PROGRESS (call BEFORE doing the step's work)
-  python3 scripts/update_workflow_state.py --workflow-id issue-16-20260501102500 --step 1 --status IN_PROGRESS
+  python3 scripts/update_orchestration_state.py --workflow-id issue-16-20260501102500 --step 1 --status IN_PROGRESS
 
   # Mark a step COMPLETED (call AFTER step work succeeds)
-  python3 scripts/update_workflow_state.py --workflow-id issue-16-20260501102500 --step 1 --status COMPLETED
+  python3 scripts/update_orchestration_state.py --workflow-id issue-16-20260501102500 --step 1 --status COMPLETED
 
   # Mark a step BLOCKED (call on any gate failure; pipeline must stop after this)
-  python3 scripts/update_workflow_state.py --workflow-id issue-16-20260501102500 --step 2 --status BLOCKED --error "Gate 1 BLOCKED: no app.py change"
+  python3 scripts/update_orchestration_state.py --workflow-id issue-16-20260501102500 --step 2 --status BLOCKED --error "Gate 1 BLOCKED: no app.py change"
 
   # Check both parallel steps (3 and 4) are COMPLETED before allowing Step 5
-  python3 scripts/update_workflow_state.py --workflow-id issue-16-20260501102500 --check-parallel-complete
+  python3 scripts/update_orchestration_state.py --workflow-id issue-16-20260501102500 --check-parallel-complete
 
   # Mark entire workflow COMPLETED (call after Step 5 succeeds)
-  python3 scripts/update_workflow_state.py --workflow-id issue-16-20260501102500 --complete
+  python3 scripts/update_orchestration_state.py --workflow-id issue-16-20260501102500 --complete
 
 Exits with code 0 on success. Exits with code 2 if parallel gate not met.
 Prints the updated status line for verification.

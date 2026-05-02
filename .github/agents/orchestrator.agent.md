@@ -33,7 +33,7 @@ bash scripts/run_parallel_testing.sh  ← shell script (EXECUTE both test suites
 Extract the issue number. Generate `workflow_id` as `issue-<N>-<YYYYMMDDHHMMSS>` (current UTC time).
 
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --init --workflow-id <workflow_id> --issue-number <N>
 ```
 Confirm `[OK]` before continuing.
@@ -89,7 +89,7 @@ Invoke `#pr-creator`, passing `workflow_id` and `issue_number`.
 - **COMPLETED** → mark workflow complete:
 
 ```bash
-python3 scripts/update_workflow_state.py --workflow-id <workflow_id> --complete
+python3 scripts/update_orchestration_state.py --workflow-id <workflow_id> --complete
 ```
 Confirm `[OK]`, then report the PR URL to the user.
 
@@ -103,4 +103,4 @@ On any BLOCK (any step):
 ## Dashboard
 
 Workflow state is written to `.workflow/state/<workflow_id>.json` after every transition.
-The Streamlit dashboard (`scripts/workflow_dashboard.py`) reads this file, renders the parallel pipeline view, and auto-refreshes every 5 seconds.
+The Streamlit dashboard (`scripts/ai_orchestration_dashboard.py`) reads this file, renders the parallel pipeline view, and auto-refreshes every 5 seconds.

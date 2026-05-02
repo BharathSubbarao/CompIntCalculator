@@ -15,7 +15,7 @@ You are the **Developer specialist**. Your sole responsibility is to implement e
 
 ### 1. Mark Step IN_PROGRESS
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 2 --status IN_PROGRESS
 ```
 ✅ Confirm `[OK]` before continuing.
@@ -36,7 +36,7 @@ Make the code change in `app.py` (or the relevant product file) **now**, before 
 **Scope fence — mandatory:**
 - Implement EXACTLY and ONLY what `## Specific Change Required` states.
 - Do NOT add extra improvements, refactors, or features inferred from conventions.
-- Do NOT modify `scripts/workflow_dashboard.py`, `playwright.config.ts`, or `.github/`.
+- Do NOT modify `scripts/ai_orchestration_dashboard.py`, `playwright.config.ts`, or `.github/`.
 
 ### 5. Gate 1 — Functional Coverage check
 ```bash
@@ -45,7 +45,7 @@ git diff --name-only
 
 If `app.py` has **not** been modified:
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 2 --status BLOCKED \
   --error "Gate 1 BLOCKED: No product file (app.py) was changed."
 ```
@@ -53,7 +53,7 @@ python3 scripts/update_workflow_state.py \
 
 If only infrastructure files changed (`scripts/`, `playwright.config.ts`):
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 2 --status BLOCKED \
   --error "Gate 1 BLOCKED: Only infrastructure files were changed. At least one product file (app.py) must be modified."
 ```
@@ -69,7 +69,7 @@ Commit only product source files. Do not commit test artifacts, `.env`, or infra
 
 ### 7. Mark Step COMPLETED
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 2 --status COMPLETED
 ```
 ✅ Confirm `[OK]`.

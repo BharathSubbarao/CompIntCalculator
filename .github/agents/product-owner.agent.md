@@ -15,7 +15,7 @@ You are the **Product Owner specialist**. Your sole responsibility is to refine 
 
 ### 1. Mark Step IN_PROGRESS
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 1 --status IN_PROGRESS
 ```
 ✅ Confirm `[OK]` before continuing.
@@ -35,7 +35,7 @@ Answer: *"What exact named element (dropdown option, field, formula, label) must
 
 If the answer requires any assumption or inference beyond the issue text:
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 1 --status BLOCKED \
   --error "Gate 0 BLOCKED: Issue is too ambiguous — cannot derive a specific change without assumptions. Please clarify the issue."
 ```
@@ -64,7 +64,7 @@ gh issue edit <issue_number> \
 
 ### 6. Mark Step COMPLETED
 ```bash
-python3 scripts/update_workflow_state.py \
+python3 scripts/update_orchestration_state.py \
   --workflow-id <workflow_id> --step 1 --status COMPLETED
 ```
 ✅ Confirm `[OK]`.
