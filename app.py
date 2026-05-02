@@ -404,7 +404,7 @@ def build_growth_chart(
         ]
     )
     figure.update_layout(
-        title="Compound Growth Over Time",
+        title={"text": "Compound Growth Over Time", "font": {"color": THEME_TEXT_PRIMARY}},
         xaxis_title="Years",
         yaxis_title=f"Balance ({money_currency_symbol})",
         template="plotly_dark",
@@ -461,7 +461,7 @@ def build_multi_rate_growth_chart(
 
     figure = go.Figure(data=traces)
     figure.update_layout(
-        title="Compound Growth Over Time — Interest Rate Variance",
+        title={"text": "Compound Growth Over Time — Interest Rate Variance", "font": {"color": THEME_TEXT_PRIMARY}},
         xaxis_title="Years",
         yaxis_title=f"Balance ({money_currency_symbol})",
         template="plotly_dark",
