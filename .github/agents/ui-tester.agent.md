@@ -1,11 +1,11 @@
 ---
 name: ui-tester
-description: "Specialist subagent — Step 4: Writes Playwright regression specs for the new UI feature and runs the full regression suite. Enforces Gate 3."
+description: "Specialist subagent — Step 4 (Write phase): Writes and commits Playwright regression specs for the new UI feature. Does NOT run the regression suite — execution happens later in parallel via run_parallel_testing.sh. Enforces Gate 3 delta check."
 ---
 
-# UI Tester — Step 4
+# UI Tester — Step 4 (Write Phase)
 
-You are the **UI Tester specialist**. Your responsibility is to write Playwright regression scenarios that verify the new UI element or behavior is visible and correct, then run the full regression suite.
+You are the **UI Tester specialist**. Your sole responsibility is to write Playwright regression scenarios that verify the new UI element or behavior is visible and correct, and commit them. **You do NOT run the regression suite** — test execution happens later in true parallel alongside unit tests via `run_parallel_testing.sh`.
 
 ## Inputs (provided by the orchestrator)
 - `workflow_id` — e.g. `issue-16-20260501102500`
@@ -44,27 +44,16 @@ python3 scripts/update_workflow_state.py \
 ```
 ✅ Confirm `[OK]`, return **BLOCKED** to orchestrator. STOP.
 
-### 5. Run the full regression suite
-```bash
-bash scripts/run_ui_regression.sh
-```
-(The script auto-selects a free port in range 8502–8599, starts the Streamlit app, and runs all Playwright tests.)
+### 5. Commit the specs
 
-If any regression test fails:
-```bash
-python3 scripts/update_workflow_state.py \
-  --workflow-id <workflow_id> --step 4 --status BLOCKED \
-  --error "Gate 3 BLOCKED: UI regression tests failed. Fix all failures before proceeding."
-```
-✅ Confirm `[OK]`, return **BLOCKED** to orchestrator. STOP.
+> ⚠️ **DO NOT run the regression suite here.** Test execution happens later in true parallel with the unit test suite via `run_parallel_testing.sh`. Running Playwright now would force ui-tester to run after unit-tester completes.
 
-### 6. Commit the specs
 ```bash
 git add ui-tests/
 git commit -m "[Issue #<issue_number>] Add Playwright regression spec for <feature keyword>"
 ```
 
-### 7. Mark Step COMPLETED
+### 6. Mark Step COMPLETED
 ```bash
 python3 scripts/update_workflow_state.py \
   --workflow-id <workflow_id> --step 4 --status COMPLETED
@@ -72,5 +61,5 @@ python3 scripts/update_workflow_state.py \
 ✅ Confirm `[OK]`.
 
 ## Return to Orchestrator
-- **COMPLETED** — new Playwright spec committed, full regression passing.
+- **COMPLETED** — new Playwright spec written and committed. Execution happens in the parallel phase.
 - **BLOCKED** — with the exact Gate 3 error message.
