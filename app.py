@@ -224,6 +224,24 @@ def format_money_value(
     return f"{money_sign}{money_currency_symbol}{money_absolute:,.2f}"
 
 
+def _green_gradient_styles(series: pd.Series) -> list[str]:
+    """Return per-cell background styles interpolating from dark green to neon green."""
+    min_val, max_val = series.min(), series.max()
+    spread = max_val - min_val if max_val != min_val else 1.0
+    # Low colour: #1A3A20 (dark muted green), high colour: #39D353 (neon green)
+    low_rgb = (26, 58, 32)
+    high_rgb = (57, 211, 83)
+    styles = []
+    for val in series:
+        t = (val - min_val) / spread
+        r = int(low_rgb[0] + t * (high_rgb[0] - low_rgb[0]))
+        g = int(low_rgb[1] + t * (high_rgb[1] - low_rgb[1]))
+        b = int(low_rgb[2] + t * (high_rgb[2] - low_rgb[2]))
+        text_color = THEME_TEXT_PRIMARY if t > 0.4 else "#A0C8A0"
+        styles.append(f"background-color: rgb({r},{g},{b}); color: {text_color};")
+    return styles
+
+
 def style_summary_dataframe(rows: list[dict], balance_columns: list[str] | None = None) -> pd.io.formats.style.Styler:
     """Apply dark-green fintech styling to the year-by-year summary grid.
 
@@ -269,15 +287,11 @@ def style_summary_dataframe(rows: list[dict], balance_columns: list[str] | None 
         ])
     )
 
-    # Apply green gradient color scale to each balance column
+    # Apply green gradient to numeric balance columns (no matplotlib needed)
     balance_cols = balance_columns or [c for c in df.columns if c not in ("Period", "Years")]
     for col in balance_cols:
-        if col in df.columns:
-            styler = styler.background_gradient(
-                cmap="Greens",
-                subset=[col],
-                vmin=df[col].min() if pd.api.types.is_numeric_dtype(df[col]) else None,
-            )
+        if col in df.columns and pd.api.types.is_numeric_dtype(df[col]):
+            styler = styler.apply(_green_gradient_styles, subset=[col])
 
     return styler
 
