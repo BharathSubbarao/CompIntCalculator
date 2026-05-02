@@ -41,7 +41,7 @@ User Chat
      └───────┬────────────────────────────────┘
              │  (both must be COMPLETED)
      ┌───────▼────────┐
-     │   pr-creator   │  Step 5 — Push branch, create traceable PR (Gate 4)
+     │   pr-creator   │  Step 6 — Push branch, create traceable PR (Gate 4)
      └────────────────┘
 ```
 
@@ -84,7 +84,7 @@ bash scripts/run_parallel_testing.sh <workflow_id>
     exit 1 = at least one BLOCKED
 ```
 
-Step 5 only starts after this script exits 0.
+Step 6 only starts after this script exits 0.
 
 > ⚠️ **The orchestrator must never call #unit-tester or #ui-tester to run tests.** Doing so forces ui-tester to wait for unit-tester to finish, defeating the parallelism.
 

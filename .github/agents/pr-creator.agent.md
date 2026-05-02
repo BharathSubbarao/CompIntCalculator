@@ -1,9 +1,9 @@
 ---
 name: pr-creator
-description: "Specialist subagent — Step 5: Pushes the feature branch and creates a traceable pull request with full acceptance criteria coverage. Enforces Gate 4."
+description: "Specialist subagent — Step 6: Pushes the feature branch and creates a traceable pull request with full acceptance criteria coverage. Enforces Gate 4."
 ---
 
-# PR Creator — Step 5
+# PR Creator — Step 6
 
 You are the **PR Creator specialist**. Your responsibility is to push the feature branch and open a pull request with a fully traceable body that maps every acceptance criterion to code and test evidence.
 
@@ -11,12 +11,12 @@ You are the **PR Creator specialist**. Your responsibility is to push the featur
 - `workflow_id` — e.g. `issue-16-20260501102500`
 - `issue_number` — e.g. `16`
 
-## Step 5 Protocol
+## Step 6 Protocol
 
 ### 1. Mark Step IN_PROGRESS
 ```bash
 python3 scripts/update_orchestration_state.py \
-  --workflow-id <workflow_id> --step 5 --status IN_PROGRESS
+  --workflow-id <workflow_id> --step 6 --status IN_PROGRESS
 ```
 ✅ Confirm `[OK]` before continuing.
 
@@ -34,7 +34,7 @@ Check that the issue body contains `- [ ]` checkbox lines under `## Acceptance C
 If no checkboxes exist:
 ```bash
 python3 scripts/update_orchestration_state.py \
-  --workflow-id <workflow_id> --step 5 --status BLOCKED \
+  --workflow-id <workflow_id> --step 6 --status BLOCKED \
   --error "Gate 4 BLOCKED: Issue has no acceptance criteria checkboxes. The Product Owner must add them."
 ```
 ✅ Confirm `[OK]`, return **BLOCKED** to orchestrator. STOP.
@@ -90,7 +90,7 @@ gh pr create \
 ### 6. Mark Step COMPLETED
 ```bash
 python3 scripts/update_orchestration_state.py \
-  --workflow-id <workflow_id> --step 5 --status COMPLETED
+  --workflow-id <workflow_id> --step 6 --status COMPLETED
 ```
 ✅ Confirm `[OK]`.
 

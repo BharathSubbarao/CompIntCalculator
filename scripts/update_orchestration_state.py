@@ -51,21 +51,23 @@ STEP_NAMES = {
     2: ("Developer Implementation", "developer"),
     3: ("Unit Testing", "unit_tester"),
     4: ("UI Regression Testing", "ui_tester"),
-    5: ("Pull Request Creation", "pr_creator"),
+    5: ("Parallel Test Execution", "parallel_runner"),
+    6: ("Pull Request Creation", "pr_creator"),
 }
 
-# Steps 3 and 4 must both be COMPLETED (after parallel execution) before Step 5 may start.
+# Step 5 is the parallel execution phase; step 6 depends on it completing.
 PARALLEL_STEPS = {3, 4}
 
 # Execution mode stored per-step in state JSON so the dashboard can render correctly.
 # Steps 3 and 4 are sequential write-only phases (subagents write & commit tests/specs).
-# The parallel execution of both test suites is handled externally by run_parallel_testing.sh.
+# Step 5 is the parallel execution phase (run_parallel_testing.sh).
 EXECUTION_MODE = {
     1: "sequential",
     2: "sequential",
     3: "sequential",
     4: "sequential",
-    5: "sequential",
+    5: "parallel",
+    6: "sequential",
 }
 
 VALID_STEP_STATUSES = {"PENDING", "IN_PROGRESS", "COMPLETED", "BLOCKED", "FAILED"}
@@ -160,7 +162,7 @@ def cmd_update_parallel_step(workflow_id: str, parallel_step: str, status: str, 
 
 
 def cmd_check_parallel_complete(workflow_id: str) -> None:
-    """Exit 0 if both parallel execution runs are COMPLETED; exit 2 otherwise."""
+    """Exit 0 if Step 5 (Parallel Test Execution) is COMPLETED; exit 2 otherwise."""
     state = load_state(workflow_id)
     par_exec = state.get("parallel_execution", {})
     runs = {
@@ -172,14 +174,14 @@ def cmd_check_parallel_complete(workflow_id: str) -> None:
         details = ", ".join(f"{k}={v}" for k, v in sorted(not_done.items()))
         print(
             f"[WAIT] Parallel gate not met for workflow_id={workflow_id}: {details}. "
-            "Step 5 (PR Creator) must not start until both unit_test_run and ui_test_run are COMPLETED.",
+            "Step 6 (PR Creator) must not start until Step 5 (Parallel Test Execution) is COMPLETED.",
             file=sys.stderr,
         )
         sys.exit(2)
     print(
         f"[OK] Parallel gate met for workflow_id={workflow_id}: "
-        "unit_test_run and ui_test_run are both COMPLETED. "
-        "Step 5 (PR Creator) may now start."
+        "Step 5 (Parallel Test Execution) is COMPLETED. "
+        "Step 6 (PR Creator) may now start."
     )
 
 
@@ -292,7 +294,7 @@ def main() -> None:
     parser.add_argument("--workflow-id", required=True, help="Workflow ID (e.g. issue-16-20260501102500)")
     parser.add_argument("--init", action="store_true", help="Create initial state file with all steps PENDING")
     parser.add_argument("--issue-number", type=int, help="Issue number (required with --init)")
-    parser.add_argument("--step", type=int, choices=[1, 2, 3, 4, 5], help="Step number to update")
+    parser.add_argument("--step", type=int, choices=[1, 2, 3, 4, 5, 6], help="Step number to update")
     parser.add_argument("--status", choices=list(VALID_STEP_STATUSES), help="New status for the step")
     parser.add_argument("--error", help="Error message (required when --status BLOCKED)")
     parser.add_argument(
