@@ -1247,3 +1247,285 @@ class TestBuildYearlySummaryBalanceKey:
             compounds_per_year=12,
         )
         assert isinstance(rows[0]["Balance"], (int, float))
+
+
+# ---------------------------------------------------------------------------
+# S19 – Y-axis tick config: INR lakhs/crores and non-INR millions (Issue #35)
+# ---------------------------------------------------------------------------
+
+class TestBuildYaxisTickConfig:
+    """S19 – _build_yaxis_tick_config() returns correct tick labels for INR and
+    non-INR currencies based on data magnitude (Issue #35)."""
+
+    # ------------------------------------------------------------------
+    # INR – crore threshold (>= 1 Crore = 10,000,000)
+    # ------------------------------------------------------------------
+
+    def test_inr_crore_scale_returns_cr_labels(self) -> None:
+        """INR with max_balance >= 1 Crore must produce ticktext entries ending in 'Cr'."""
+        result = app._build_yaxis_tick_config(20_000_000.0, "INR")
+        assert result, "Expected non-empty tick config for INR crore-scale value"
+        assert "ticktext" in result and "tickvals" in result
+        # At least one tick label (beyond '0') should contain 'Cr'
+        non_zero_labels = [t for t in result["ticktext"] if t != "0 Cr"]
+        assert any("Cr" in label for label in non_zero_labels), (
+            "Expected 'Cr' suffix in tick labels for INR crore-scale"
+        )
+
+    def test_inr_crore_scale_tickvals_and_ticktext_same_length(self) -> None:
+        """tickvals and ticktext arrays must have equal length for INR crore scale."""
+        result = app._build_yaxis_tick_config(50_000_000.0, "INR")
+        assert len(result["tickvals"]) == len(result["ticktext"])
+
+    def test_inr_crore_scale_first_tick_is_zero(self) -> None:
+        """First tick value must be 0 so the axis always starts at zero."""
+        result = app._build_yaxis_tick_config(15_000_000.0, "INR")
+        assert result["tickvals"][0] == 0.0
+
+    def test_inr_crore_scale_tickvals_are_monotonically_increasing(self) -> None:
+        """tickvals must be strictly increasing for INR crore-scale data."""
+        result = app._build_yaxis_tick_config(30_000_000.0, "INR")
+        vals = result["tickvals"]
+        assert all(v2 > v1 for v1, v2 in zip(vals, vals[1:]))
+
+    # ------------------------------------------------------------------
+    # INR – lakh threshold (>= 1 Lakh = 100,000 but < 1 Crore)
+    # ------------------------------------------------------------------
+
+    def test_inr_lakh_scale_returns_l_labels(self) -> None:
+        """INR with max_balance >= 1 Lakh but < 1 Crore must produce 'L' tick labels."""
+        result = app._build_yaxis_tick_config(500_000.0, "INR")
+        assert result, "Expected non-empty tick config for INR lakh-scale value"
+        assert any("L" in label for label in result["ticktext"]), (
+            "Expected 'L' suffix in tick labels for INR lakh-scale"
+        )
+
+    def test_inr_lakh_scale_no_cr_labels(self) -> None:
+        """INR lakh-scale must NOT use 'Cr' labels (value is below 1 Crore)."""
+        result = app._build_yaxis_tick_config(500_000.0, "INR")
+        assert not any("Cr" in label for label in result["ticktext"]), (
+            "INR lakh-scale must not produce 'Cr' labels"
+        )
+
+    def test_inr_lakh_scale_tickvals_and_ticktext_same_length(self) -> None:
+        """tickvals and ticktext arrays must have equal length for INR lakh scale."""
+        result = app._build_yaxis_tick_config(800_000.0, "INR")
+        assert len(result["tickvals"]) == len(result["ticktext"])
+
+    # ------------------------------------------------------------------
+    # INR – below threshold (< 1 Lakh)
+    # ------------------------------------------------------------------
+
+    def test_inr_below_lakh_threshold_returns_empty_dict(self) -> None:
+        """INR with max_balance < 1 Lakh must return {} (default Plotly ticks)."""
+        result = app._build_yaxis_tick_config(50_000.0, "INR")
+        assert result == {}, (
+            "Expected empty dict for INR value below 1 Lakh threshold"
+        )
+
+    def test_inr_exactly_at_lakh_threshold_returns_tick_config(self) -> None:
+        """INR with max_balance exactly equal to 1 Lakh must return a tick config."""
+        result = app._build_yaxis_tick_config(100_000.0, "INR")
+        assert result != {}, "Expected tick config at exactly 1 Lakh boundary"
+
+    # ------------------------------------------------------------------
+    # Non-INR – million threshold (>= 1,000,000)
+    # ------------------------------------------------------------------
+
+    def test_non_inr_million_scale_returns_m_labels(self) -> None:
+        """Non-INR currency with max_balance >= 1 Million must produce 'M' tick labels."""
+        result = app._build_yaxis_tick_config(5_000_000.0, "USD")
+        assert result, "Expected non-empty tick config for USD million-scale value"
+        assert any("M" in label for label in result["ticktext"]), (
+            "Expected 'M' suffix in tick labels for USD million-scale"
+        )
+
+    def test_non_inr_million_scale_no_cr_or_l_labels(self) -> None:
+        """Non-INR million-scale must NOT produce 'Cr' or 'L' labels."""
+        result = app._build_yaxis_tick_config(3_000_000.0, "EUR")
+        labels = result["ticktext"]
+        assert not any("Cr" in label for label in labels), "Non-INR must not use 'Cr' labels"
+        assert not any(" L" in label for label in labels), "Non-INR must not use 'L' labels"
+
+    def test_non_inr_million_scale_tickvals_and_ticktext_same_length(self) -> None:
+        """tickvals and ticktext must have equal length for non-INR million scale."""
+        result = app._build_yaxis_tick_config(10_000_000.0, "GBP")
+        assert len(result["tickvals"]) == len(result["ticktext"])
+
+    def test_non_inr_million_scale_first_tick_is_zero(self) -> None:
+        """First tick value must be 0 for non-INR million-scale data."""
+        result = app._build_yaxis_tick_config(2_000_000.0, "USD")
+        assert result["tickvals"][0] == 0.0
+
+    # ------------------------------------------------------------------
+    # Non-INR – below million threshold
+    # ------------------------------------------------------------------
+
+    def test_non_inr_below_million_threshold_returns_empty_dict(self) -> None:
+        """Non-INR currency with max_balance < 1 Million must return {} (default ticks)."""
+        result = app._build_yaxis_tick_config(500_000.0, "USD")
+        assert result == {}, (
+            "Expected empty dict for USD value below 1 Million threshold"
+        )
+
+    def test_non_inr_exactly_at_million_threshold_returns_tick_config(self) -> None:
+        """Non-INR with max_balance exactly equal to 1 Million must return a tick config."""
+        result = app._build_yaxis_tick_config(1_000_000.0, "USD")
+        assert result != {}, "Expected tick config at exactly 1 Million boundary"
+
+    # ------------------------------------------------------------------
+    # Edge cases
+    # ------------------------------------------------------------------
+
+    def test_zero_max_balance_returns_empty_dict(self) -> None:
+        """max_balance of 0 must return {} (no meaningful ticks to generate)."""
+        result = app._build_yaxis_tick_config(0.0, "INR")
+        assert result == {}
+
+    def test_negative_max_balance_returns_empty_dict(self) -> None:
+        """Negative max_balance must return {} (guard against degenerate input)."""
+        result = app._build_yaxis_tick_config(-1_000_000.0, "USD")
+        assert result == {}
+
+    def test_inr_crore_scale_labels_do_not_use_m_suffix(self) -> None:
+        """INR crore-scale tick labels must not contain 'M' (millions notation)."""
+        result = app._build_yaxis_tick_config(20_000_000.0, "INR")
+        assert not any("M" in label for label in result["ticktext"]), (
+            "INR tick labels must never use 'M' (millions) suffix"
+        )
+
+
+# ------------------------------------------------------------------
+# Integration: build_growth_chart applies yaxis tick config (Issue #35)
+# ------------------------------------------------------------------
+
+class TestBuildGrowthChartYaxisTickConfig:
+    """S19 – build_growth_chart() sets yaxis tickvals/ticktext via the
+    _build_yaxis_tick_config helper for INR crore-scale and non-INR
+    million-scale data (Issue #35)."""
+
+    def _crore_rows(self) -> list:
+        """Growth rows whose max Balance is ~2 Crore (INR crore-scale)."""
+        return [
+            {"Years": 0.0,  "Balance": 1_000_000.0},
+            {"Years": 10.0, "Balance": 10_000_000.0},
+            {"Years": 20.0, "Balance": 20_000_000.0},
+        ]
+
+    def _million_rows(self) -> list:
+        """Growth rows whose max Balance is 5 million (non-INR million-scale)."""
+        return [
+            {"Years": 0.0,  "Balance": 500_000.0},
+            {"Years": 10.0, "Balance": 2_500_000.0},
+            {"Years": 20.0, "Balance": 5_000_000.0},
+        ]
+
+    def _small_rows(self) -> list:
+        """Growth rows whose max Balance is below all thresholds."""
+        return [
+            {"Years": 0.0,  "Balance": 1_000.0},
+            {"Years": 5.0,  "Balance": 5_000.0},
+            {"Years": 10.0, "Balance": 10_000.0},
+        ]
+
+    def test_inr_crore_scale_chart_yaxis_has_tickvals(self) -> None:
+        """build_growth_chart with INR crore-scale data must set yaxis tickvals."""
+        fig = app.build_growth_chart(self._crore_rows(), "₹", "INR")
+        assert fig.layout.yaxis.tickvals is not None and len(fig.layout.yaxis.tickvals) > 0, (
+            "INR crore-scale chart must have yaxis tickvals set"
+        )
+
+    def test_inr_crore_scale_chart_yaxis_ticktext_contains_cr(self) -> None:
+        """build_growth_chart with INR crore-scale data must label ticks with 'Cr'."""
+        fig = app.build_growth_chart(self._crore_rows(), "₹", "INR")
+        ticktext = list(fig.layout.yaxis.ticktext)
+        assert any("Cr" in t for t in ticktext), (
+            "INR crore-scale chart yaxis ticktext must contain 'Cr' labels"
+        )
+
+    def test_inr_lakh_scale_chart_yaxis_ticktext_contains_l(self) -> None:
+        """build_growth_chart with INR lakh-scale data (< 1 Cr) must label ticks with 'L'."""
+        lakh_rows = [
+            {"Years": 0.0,  "Balance": 50_000.0},
+            {"Years": 5.0,  "Balance": 300_000.0},
+            {"Years": 10.0, "Balance": 700_000.0},
+        ]
+        fig = app.build_growth_chart(lakh_rows, "₹", "INR")
+        ticktext = list(fig.layout.yaxis.ticktext)
+        assert any("L" in t for t in ticktext), (
+            "INR lakh-scale chart yaxis ticktext must contain 'L' labels"
+        )
+
+    def test_non_inr_million_scale_chart_yaxis_ticktext_contains_m(self) -> None:
+        """build_growth_chart with USD million-scale data must label ticks with 'M'."""
+        fig = app.build_growth_chart(self._million_rows(), "$", "USD")
+        ticktext = list(fig.layout.yaxis.ticktext)
+        assert any("M" in t for t in ticktext), (
+            "USD million-scale chart yaxis ticktext must contain 'M' labels"
+        )
+
+    def test_small_value_chart_yaxis_has_no_custom_tickvals(self) -> None:
+        """build_growth_chart with small data (below all thresholds) must not set custom tickvals."""
+        fig = app.build_growth_chart(self._small_rows(), "$", "USD")
+        # When _build_yaxis_tick_config returns {}, tickvals stays at Plotly default (None)
+        assert fig.layout.yaxis.tickvals is None, (
+            "Small-value chart must not override yaxis tickvals"
+        )
+
+    def test_switching_inr_to_usd_changes_tick_labels_to_m(self) -> None:
+        """Switching from INR to USD on same crore-scale data must produce 'M' not 'Cr' labels."""
+        fig_usd = app.build_growth_chart(self._crore_rows(), "$", "USD")
+        ticktext = list(fig_usd.layout.yaxis.ticktext)
+        assert any("M" in t for t in ticktext), "USD chart for large values must use 'M' labels"
+        assert not any("Cr" in t for t in ticktext), "USD chart must not use 'Cr' labels"
+
+
+# ------------------------------------------------------------------
+# Integration: build_multi_rate_growth_chart applies yaxis tick config (Issue #35)
+# ------------------------------------------------------------------
+
+class TestBuildMultiRateGrowthChartYaxisTickConfig:
+    """S19 – build_multi_rate_growth_chart() applies the same yaxis tick config
+    logic as build_growth_chart for INR and non-INR currencies (Issue #35)."""
+
+    def _crore_series(self, currency_symbol: str, currency_code: str) -> list:
+        """Three-rate series with crore-scale balances."""
+        return [
+            {
+                "label": "8% (base)",
+                "growth_rows": [
+                    {"Years": 0.0,  "Balance": 1_000_000.0},
+                    {"Years": 20.0, "Balance": 20_000_000.0},
+                ],
+            },
+            {
+                "label": "10% (+2%)",
+                "growth_rows": [
+                    {"Years": 0.0,  "Balance": 1_000_000.0},
+                    {"Years": 20.0, "Balance": 30_000_000.0},
+                ],
+            },
+        ]
+
+    def test_multi_rate_inr_crore_scale_yaxis_has_cr_labels(self) -> None:
+        """build_multi_rate_growth_chart with INR crore-scale must set 'Cr' ticktext."""
+        fig = app.build_multi_rate_growth_chart(self._crore_series("₹", "INR"), "₹", "INR")
+        ticktext = list(fig.layout.yaxis.ticktext)
+        assert any("Cr" in t for t in ticktext), (
+            "INR crore-scale multi-rate chart must have 'Cr' yaxis tick labels"
+        )
+
+    def test_multi_rate_usd_million_scale_yaxis_has_m_labels(self) -> None:
+        """build_multi_rate_growth_chart with USD million-scale must set 'M' ticktext."""
+        fig = app.build_multi_rate_growth_chart(self._crore_series("$", "USD"), "$", "USD")
+        ticktext = list(fig.layout.yaxis.ticktext)
+        assert any("M" in t for t in ticktext), (
+            "USD million-scale multi-rate chart must have 'M' yaxis tick labels"
+        )
+
+    def test_multi_rate_inr_crore_scale_yaxis_tickvals_not_none(self) -> None:
+        """build_multi_rate_growth_chart with INR crore-scale data must set yaxis tickvals."""
+        fig = app.build_multi_rate_growth_chart(self._crore_series("₹", "INR"), "₹", "INR")
+        assert fig.layout.yaxis.tickvals is not None and len(fig.layout.yaxis.tickvals) > 0, (
+            "INR crore-scale multi-rate chart must have yaxis tickvals set"
+        )
