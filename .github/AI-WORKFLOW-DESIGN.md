@@ -26,14 +26,19 @@ User Chat
      │   developer    │  Step 2 — Implement feature in app.py (Gate 1)
      └───────┬────────┘
              │
-     ┌───────┴────────┐
-     │   PARALLEL     │  Steps 3 & 4 — run as OS-level background processes
-     │                │
-  ┌──▼──────┐  ┌──────▼───┐
-  │unit-    │  │ ui-tester│  Step 3 — pytest  /  Step 4 — Playwright (Gates 2 & 3)
-  │tester   │  │          │
-  └──┬──────┘  └──────┬───┘
-     └───────┬─────────┘
+     ┌───────▼────────┐
+     │  unit-tester   │  Step 3 — Write & commit pytest tests ONLY (Gate 2 delta check)
+     └───────┬────────┘
+             │
+     ┌───────▼────────┐
+     │   ui-tester    │  Step 4 — Write & commit Playwright specs ONLY (Gate 3 delta check)
+     └───────┬────────┘
+             │
+     ┌───────┴────────────────────────────────┐
+     │  run_parallel_testing.sh               │  Execute both suites simultaneously
+     │  ├── pytest        & → PID A (Step 3)  │
+     │  └── playwright    & → PID B (Step 4)  │
+     └───────┬────────────────────────────────┘
              │  (both must be COMPLETED)
      ┌───────▼────────┐
      │   pr-creator   │  Step 5 — Push branch, create traceable PR (Gate 4)
@@ -49,26 +54,39 @@ User Chat
 | `orchestrator.agent.md` | **Orchestrator** — manages pipeline, state, BLOCK propagation | — |
 | `product-owner.agent.md` | Refines raw issue into structured template with acceptance criteria | Gate 0 |
 | `developer.agent.md` | Implements feature change in `app.py` | Gate 1 |
-| `unit-tester.agent.md` | Writes/runs pytest unit tests in `tests/test_app.py` | Gate 2 |
-| `ui-tester.agent.md` | Writes/runs Playwright regression specs in `ui-tests/regression/` | Gate 3 |
+| `unit-tester.agent.md` | **Writes & commits** pytest unit tests in `tests/test_app.py` (does NOT run them) | Gate 2 |
+| `ui-tester.agent.md` | **Writes & commits** Playwright regression specs in `ui-tests/regression/` (does NOT run them) | Gate 3 |
 | `pr-creator.agent.md` | Pushes branch and creates PR with full traceability checklist | Gate 4 |
 
 ---
 
 ## Parallelism
 
-VS Code Copilot Chat is single-threaded. Steps 3 and 4 must run in **true parallel** via OS-level processes:
+VS Code Copilot Chat is single-threaded — it cannot run two subagents simultaneously. The solution is a **write/execute split**:
+
+### Write phase (sequential subagents)
+Steps 3 and 4 run as sequential subagent calls. Each agent **only writes and commits** tests/specs — no execution. This is inherently sequential because LLM work cannot be parallelized within a single agent context.
+
+```
+#unit-tester  →  writes & commits tests/test_app.py
+#ui-tester    →  writes & commits ui-tests/regression/*.spec.ts
+```
+
+### Execution phase (true OS-level parallel)
+Once both write phases are committed, the orchestrator runs a single shell command that launches both test suites as background OS processes simultaneously:
 
 ```
 bash scripts/run_parallel_testing.sh <workflow_id>
-    ├── unit_testing()  &   → PID A  →  .workflow/logs/<wid>-unit-tester.log
-    └── ui_testing()    &   → PID B  →  .workflow/logs/<wid>-ui-tester.log
+    ├── pytest      &   → PID A  →  .workflow/logs/<wid>-unit-tester.log
+    └── playwright  &   → PID B  →  .workflow/logs/<wid>-ui-tester.log
                 wait
     exit 0 = both COMPLETED
     exit 1 = at least one BLOCKED
 ```
 
 Step 5 only starts after this script exits 0.
+
+> ⚠️ **The orchestrator must never call #unit-tester or #ui-tester to run tests.** Doing so forces ui-tester to wait for unit-tester to finish, defeating the parallelism.
 
 ---
 
@@ -100,8 +118,8 @@ Every gate is enforced inside the owning subagent. A failure raises a BLOCKED st
 |------|-------|-------|
 | Gate 0 | product-owner | Issue has structured template + acceptance criteria |
 | Gate 1 | developer | `app.py` was changed (infra-only changes are rejected) |
-| Gate 2 | unit-tester | New/modified test in `tests/test_app.py` referencing the feature; all tests pass |
-| Gate 3 | ui-tester | New/modified Playwright spec in `ui-tests/regression/`; all specs pass |
+| Gate 2 | unit-tester (write) + parallel script (run) | New/modified test in `tests/test_app.py` referencing the feature; all tests pass |
+| Gate 3 | ui-tester (write) + parallel script (run) | New/modified Playwright spec in `ui-tests/regression/`; all specs pass |
 | Gate 4 | pr-creator | PR body maps every acceptance criterion to code change + test evidence |
 
 ---
