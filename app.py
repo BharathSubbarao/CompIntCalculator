@@ -157,11 +157,21 @@ def inject_app_styles() -> None:
             color: {THEME_GREEN} !important;
         }}
 
-        /* ── Number input +/- buttons always visible ── */
+        /* ── Number input +/- buttons always visible and themed ── */
         button[data-testid="stNumberInputStepUp"],
         button[data-testid="stNumberInputStepDown"] {{
             opacity: 1 !important;
             visibility: visible !important;
+            background-color: {THEME_CARD} !important;
+            color: {THEME_GREEN} !important;
+            border: 1px solid {THEME_BORDER} !important;
+            border-radius: 4px !important;
+        }}
+        button[data-testid="stNumberInputStepUp"]:hover,
+        button[data-testid="stNumberInputStepDown"]:hover {{
+            background-color: {THEME_GREEN} !important;
+            color: #0B1612 !important;
+            border-color: {THEME_GREEN} !important;
         }}
     </style>
     """
