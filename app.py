@@ -185,6 +185,7 @@ FREQUENCY_OPTIONS = {
     "Quarterly": 4,
     "Monthly": 12,
     "Semi-Monthly": 24,
+    "Bi-Weekly": 26,
     "Weekly": 52,
     "Daily": 365,
 }
