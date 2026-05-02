@@ -204,6 +204,54 @@ class TestFrequencyImpact:
         result = _balance(principal, 0.0, rate, years, n)
         assert isclose(result, expected, rel_tol=1e-12)
 
+    # ------------------------------------------------------------------
+    # Issue #39 – Semi-Weekly (104 periods/year)
+    # ------------------------------------------------------------------
+
+    def test_semi_weekly_mapping_exists(self) -> None:
+        # Issue #39: "Semi-Weekly" must be present in FREQUENCY_OPTIONS
+        assert "Semi-Weekly" in app.FREQUENCY_OPTIONS
+
+    def test_semi_weekly_mapped_to_104_periods(self) -> None:
+        # Issue #39: Semi-Weekly must map to exactly 104 compounding periods per year
+        assert app.FREQUENCY_OPTIONS["Semi-Weekly"] == 104
+
+    def test_semi_weekly_frequency_compounds_correctly(self) -> None:
+        # Issue #39: Semi-Weekly (n=104) must produce a higher balance than
+        # Weekly (n=52) and a lower balance than Daily (n=365).
+        weekly      = _balance(10000.0, 0.0, 6.0, 10.0, 52)
+        semi_weekly = _balance(10000.0, 0.0, 6.0, 10.0, 104)
+        daily       = _balance(10000.0, 0.0, 6.0, 10.0, 365)
+        assert semi_weekly > weekly, (
+            "Semi-Weekly (n=104) should compound more than Weekly (n=52)"
+        )
+        assert semi_weekly < daily, (
+            "Semi-Weekly (n=104) should compound less than Daily (n=365)"
+        )
+
+    def test_semi_weekly_balance_formula(self) -> None:
+        # Issue #39: Verify the exact compound formula for n=104 over 1 year at 12%
+        # FV = P * (1 + 0.12/104)^104
+        principal = 1000.0
+        rate = 12.0
+        years = 1.0
+        n = 104
+        expected = principal * (1 + (rate / 100) / n) ** (n * years)
+        result = _balance(principal, 0.0, rate, years, n)
+        assert isclose(result, expected, rel_tol=1e-12)
+
+    def test_semi_weekly_ordered_between_weekly_and_daily_in_options(self) -> None:
+        # Issue #39: FREQUENCY_OPTIONS must contain "Semi-Weekly" between
+        # "Weekly" and "Daily" in iteration order.
+        keys = list(app.FREQUENCY_OPTIONS.keys())
+        assert "Semi-Weekly" in keys
+        assert keys.index("Semi-Weekly") > keys.index("Weekly"), (
+            '"Semi-Weekly" must appear after "Weekly" in FREQUENCY_OPTIONS'
+        )
+        assert keys.index("Semi-Weekly") < keys.index("Daily"), (
+            '"Semi-Weekly" must appear before "Daily" in FREQUENCY_OPTIONS'
+        )
+
     def test_frequency_has_no_impact_at_zero_rate(self) -> None:
         # All frequencies should produce identical results at 0% rate
         results = [_balance(10000.0, 100.0, 0.0, 5.0, n) for n in (1, 2, 4, 12, 24, 52, 365)]
@@ -1201,9 +1249,9 @@ class TestDefaults:
         keys = list(app.FREQUENCY_OPTIONS.keys())
         assert keys[3] == "Monthly"
 
-    def test_frequency_options_contains_all_seven(self) -> None:
-        """FREQUENCY_OPTIONS must contain all 8 frequencies (updated for Bi-Weekly — Issue #37)."""
-        expected = {"Annually", "Half Yearly", "Quarterly", "Monthly", "Semi-Monthly", "Bi-Weekly", "Weekly", "Daily"}
+    def test_frequency_options_contains_all_nine(self) -> None:
+        """FREQUENCY_OPTIONS must contain all 9 frequencies (updated for Semi-Weekly — Issue #39)."""
+        expected = {"Annually", "Half Yearly", "Quarterly", "Monthly", "Semi-Monthly", "Bi-Weekly", "Weekly", "Semi-Weekly", "Daily"}
         assert set(app.FREQUENCY_OPTIONS.keys()) == expected
 
     def test_currency_symbol_inr(self) -> None:
