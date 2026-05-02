@@ -16,20 +16,22 @@ def get_plotly_template() -> str:
     return "plotly_dark" if base_theme == "dark" else "plotly_white"
 
 
-# ── Dark Teal Wealth color palette ────────────────────────────────────────────
-THEME_BG = "#1A1F2E"           # Deep charcoal-navy page background
-THEME_SIDEBAR = "#222836"      # Slightly lighter dark for sidebar
-THEME_TEAL = "#0D9488"         # Primary teal accent
-THEME_TEAL_DARK = "#0F766E"    # Deeper teal for hover / table headers
-THEME_TEAL_LIGHT = "#34D399"   # Emerald green pop for highlights
-THEME_TEXT_PRIMARY = "#E8EAF0" # Near-white primary text
-THEME_TEXT_MUTED = "#9BA3B2"   # Muted grey secondary text
-THEME_WHITE = "#FFFFFF"
-THEME_INPUT_TEXT = "#1A1A1A"   # Dark text inside input fields
+# ── Dark Green Fintech color palette ──────────────────────────────────────────
+THEME_BG = "#0B1612"           # Very dark green-black page background
+THEME_SIDEBAR = "#0D1F16"      # Slightly lighter dark green sidebar
+THEME_CARD = "#112218"         # Dark green card / panel background
+THEME_GREEN = "#39D353"        # Neon green primary accent
+THEME_GREEN_DARK = "#28A745"   # Deeper green for hover / table headers
+THEME_GREEN_GLOW = "#39D353"   # Chart line color (bright neon green)
+THEME_TEXT_PRIMARY = "#FFFFFF" # Pure white primary text
+THEME_TEXT_MUTED = "#6B7280"   # Muted grey secondary text
+THEME_INPUT_BG = "#1A2E1F"     # Dark green input field background
+THEME_INPUT_TEXT = "#FFFFFF"   # White text inside inputs
+THEME_BORDER = "#1E3A27"       # Subtle green-tinted border
 
 
 def inject_app_styles() -> None:
-    """Inject CSS to apply the Dark Teal Wealth color scheme across the app UI."""
+    """Inject CSS to apply the Dark Green Fintech color scheme across the app UI."""
     css = f"""
     <style>
         /* ── Page background ── */
@@ -40,19 +42,21 @@ def inject_app_styles() -> None:
         /* ── Top header bar ── */
         header[data-testid="stHeader"] {{
             background-color: {THEME_BG} !important;
+            border-bottom: 1px solid {THEME_BORDER} !important;
         }}
 
         /* ── App title rendered via st.title ── */
         h1 {{
-            color: {THEME_TEAL_LIGHT} !important;
+            color: {THEME_GREEN} !important;
             font-weight: 800 !important;
-            border-bottom: 3px solid {THEME_TEAL};
+            border-bottom: 2px solid {THEME_GREEN};
             padding-bottom: 8px;
+            letter-spacing: -0.5px;
         }}
 
         /* ── Section headings (st.subheader) ── */
         h2, h3 {{
-            color: {THEME_TEAL} !important;
+            color: {THEME_TEXT_PRIMARY} !important;
             font-weight: 700 !important;
         }}
 
@@ -64,6 +68,7 @@ def inject_app_styles() -> None:
         /* ── Sidebar background and text ── */
         section[data-testid="stSidebar"] {{
             background-color: {THEME_SIDEBAR} !important;
+            border-right: 1px solid {THEME_BORDER} !important;
         }}
         section[data-testid="stSidebar"] * {{
             color: {THEME_TEXT_PRIMARY} !important;
@@ -73,68 +78,83 @@ def inject_app_styles() -> None:
         section[data-testid="stSidebar"] h1,
         section[data-testid="stSidebar"] h2,
         section[data-testid="stSidebar"] h3 {{
-            color: {THEME_TEXT_PRIMARY} !important;
+            color: {THEME_GREEN} !important;
             font-weight: 600 !important;
         }}
         /* Sidebar input fields */
         section[data-testid="stSidebar"] input,
         section[data-testid="stSidebar"] .stSelectbox > div > div {{
-            background-color: {THEME_WHITE} !important;
+            background-color: {THEME_INPUT_BG} !important;
             color: {THEME_INPUT_TEXT} !important;
-            border-radius: 4px;
+            border: 1px solid {THEME_BORDER} !important;
+            border-radius: 6px;
         }}
 
         /* ── Metric cards ── */
         div[data-testid="stMetric"] {{
-            background-color: {THEME_TEAL};
-            border-radius: 8px;
+            background-color: {THEME_CARD};
+            border: 1px solid {THEME_BORDER};
+            border-radius: 10px;
             padding: 16px 20px;
-            color: {THEME_WHITE};
         }}
         div[data-testid="stMetric"] label,
         div[data-testid="stMetric"] div[data-testid="stMetricLabel"] {{
-            color: {THEME_TEXT_PRIMARY} !important;
-            font-weight: 600 !important;
+            color: {THEME_TEXT_MUTED} !important;
+            font-weight: 500 !important;
+            font-size: 0.85rem !important;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }}
         div[data-testid="stMetric"] div[data-testid="stMetricValue"] {{
-            color: {THEME_WHITE} !important;
+            color: {THEME_GREEN} !important;
             font-weight: 800 !important;
             font-size: 1.6rem !important;
         }}
 
         /* ── Primary buttons ── */
         .stButton > button {{
-            background-color: {THEME_TEAL} !important;
-            color: {THEME_WHITE} !important;
+            background-color: {THEME_GREEN} !important;
+            color: #0B1612 !important;
             border: none !important;
-            border-radius: 4px !important;
+            border-radius: 6px !important;
             font-weight: 700 !important;
             padding: 8px 20px !important;
+            letter-spacing: 0.3px;
         }}
         .stButton > button:hover {{
-            background-color: {THEME_TEAL_DARK} !important;
+            background-color: {THEME_GREEN_DARK} !important;
+            box-shadow: 0 0 12px rgba(57, 211, 83, 0.4) !important;
         }}
 
-        /* ── Dataframe / table header ── */
+        /* ── Dataframe / table ── */
         thead tr th {{
-            background-color: {THEME_TEAL_DARK} !important;
-            color: {THEME_WHITE} !important;
+            background-color: {THEME_CARD} !important;
+            color: {THEME_GREEN} !important;
             font-weight: 700 !important;
+            border-bottom: 1px solid {THEME_BORDER} !important;
+        }}
+        tbody tr {{
+            background-color: {THEME_BG} !important;
+            color: {THEME_TEXT_PRIMARY} !important;
+        }}
+        tbody tr:nth-child(even) {{
+            background-color: {THEME_CARD} !important;
         }}
 
         /* ── Caption / footer text ── */
         .stCaption, div[data-testid="stCaptionContainer"] p {{
             color: {THEME_TEXT_MUTED} !important;
-            font-weight: 500;
+            font-weight: 400;
         }}
 
         /* ── Footer banner ── */
         footer {{
             background-color: {THEME_SIDEBAR} !important;
             color: {THEME_TEXT_MUTED} !important;
+            border-top: 1px solid {THEME_BORDER} !important;
         }}
         footer a {{
-            color: {THEME_TEAL_LIGHT} !important;
+            color: {THEME_GREEN} !important;
         }}
     </style>
     """
@@ -287,9 +307,9 @@ def build_growth_chart(
                 y=[row["Balance"] for row in money_growth_rows],
                 text=money_hover_values,
                 mode="lines",
-                line={"width": 3, "color": AXIS_RED},
+                line={"width": 2.5, "color": THEME_GREEN},
                 fill="tozeroy",
-                fillcolor="rgba(151, 20, 77, 0.14)",
+                fillcolor="rgba(57, 211, 83, 0.10)",
                 hovertemplate="Year %{x:.2f}<br>Balance %{text}<extra></extra>",
             )
         ]
@@ -298,17 +318,20 @@ def build_growth_chart(
         title="Compound Growth Over Time",
         xaxis_title="Years",
         yaxis_title=f"Balance ({money_currency_symbol})",
-        template=get_plotly_template(),
+        template="plotly_dark",
+        paper_bgcolor=THEME_CARD,
+        plot_bgcolor=THEME_BG,
+        font={"color": THEME_TEXT_PRIMARY},
         margin={"l": 24, "r": 24, "t": 56, "b": 24},
     )
     return figure
 
 
-# Colors and fill colors for multi-rate variance lines (Axis Bank palette)
+# Colors and fill colors for multi-rate variance lines (dark green fintech palette)
 _VARIANCE_LINE_STYLES = [
-    {"color": "#F7B500", "fill": "rgba(247, 181, 0, 0.12)"},    # lower rate — Axis gold accent
-    {"color": "#97144D", "fill": "rgba(151, 20, 77, 0.14)"},    # base rate  — Axis maroon
-    {"color": "#E31837", "fill": "rgba(227, 24, 55, 0.10)"},    # higher rate — Axis bright red
+    {"color": "#F59E0B", "fill": "rgba(245, 158, 11, 0.10)"},   # lower rate — amber
+    {"color": "#39D353", "fill": "rgba(57, 211, 83, 0.10)"},    # base rate  — neon green
+    {"color": "#60A5FA", "fill": "rgba(96, 165, 250, 0.10)"},   # higher rate — soft blue
 ]
 
 
@@ -352,7 +375,10 @@ def build_multi_rate_growth_chart(
         title="Compound Growth Over Time — Interest Rate Variance",
         xaxis_title="Years",
         yaxis_title=f"Balance ({money_currency_symbol})",
-        template=get_plotly_template(),
+        template="plotly_dark",
+        paper_bgcolor=THEME_CARD,
+        plot_bgcolor=THEME_BG,
+        font={"color": THEME_TEXT_PRIMARY},
         legend={"title": "Rate Scenario"},
         margin={"l": 24, "r": 24, "t": 56, "b": 24},
     )

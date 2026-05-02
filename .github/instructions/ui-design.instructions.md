@@ -5,21 +5,30 @@ description: "UI/UX design system for the Compound Interest Calculator — color
 
 # UI/UX Design System — Compound Interest Calculator
 
-## Color Scheme (Dark Teal Wealth)
+## Color Scheme (Dark Green Fintech)
+
+Inspired by premium fintech dashboard aesthetics (deep forest green base, neon green accents).
 
 | Role              | Hex       | Constant            | Used For                                              |
 |-------------------|-----------|---------------------|-------------------------------------------------------|
-| Page Background   | `#1A1F2E` | `THEME_BG`          | Main content area background, header bar              |
-| Sidebar Background| `#222836` | `THEME_SIDEBAR`     | Sidebar bg, footer background                         |
-| Primary Teal      | `#0D9488` | `THEME_TEAL`        | Metric cards, buttons, `h2`/`h3`, `h1` border         |
-| Teal Dark         | `#0F766E` | `THEME_TEAL_DARK`   | Button hover, table header                            |
-| Emerald Highlight | `#34D399` | `THEME_TEAL_LIGHT`  | `h1` color, footer links, highlights                  |
-| Primary Text      | `#E8EAF0` | `THEME_TEXT_PRIMARY`| Body text, sidebar labels, metric labels              |
-| Muted Text        | `#9BA3B2` | `THEME_TEXT_MUTED`  | Captions, footer text                                 |
-| White             | `#FFFFFF` | `THEME_WHITE`       | Sidebar input fields, button text, metric values      |
-| Input Text        | `#1A1A1A` | `THEME_INPUT_TEXT`  | Dark text inside input fields                         |
+| Page Background   | `#0B1612` | `THEME_BG`          | Main content area, chart plot background              |
+| Sidebar Background| `#0D1F16` | `THEME_SIDEBAR`     | Sidebar, footer background                            |
+| Card Background   | `#112218` | `THEME_CARD`        | Metric cards, chart paper background, table rows      |
+| Neon Green        | `#39D353` | `THEME_GREEN`       | h1, metric values, buttons, chart line, sidebar labels|
+| Green Dark        | `#28A745` | `THEME_GREEN_DARK`  | Button hover state                                    |
+| Primary Text      | `#FFFFFF` | `THEME_TEXT_PRIMARY`| All body text, headings, input text                   |
+| Muted Text        | `#6B7280` | `THEME_TEXT_MUTED`  | Metric labels, captions, footer text                  |
+| Input Background  | `#1A2E1F` | `THEME_INPUT_BG`    | Sidebar input field backgrounds                       |
+| Border            | `#1E3A27` | `THEME_BORDER`      | Card borders, sidebar border, header underline        |
 
-> Plotly chart template is always `plotly_dark` to match the dark background.
+> Plotly template is always `plotly_dark` with `paper_bgcolor=THEME_CARD` and `plot_bgcolor=THEME_BG`.
+
+### Chart Line Colors (Multi-Rate Variance)
+| Scenario     | Color     | Usage         |
+|--------------|-----------|---------------|
+| Lower rate   | `#F59E0B` | Amber line    |
+| Base rate    | `#39D353` | Neon green    |
+| Higher rate  | `#60A5FA` | Soft blue     |
 
 ---
 
