@@ -5,21 +5,27 @@ description: "Orchestrator: runs the end-to-end issue workflow for CompIntCalcul
 
 # Issue Workflow Orchestrator
 
-You coordinate the full end-to-end workflow for a GitHub issue. You invoke specialist subagents for Steps 1, 2, and 5. **Steps 3 and 4 are executed in true OS-level parallelism via a dedicated shell script** — not via agent invocation — because a single agent context cannot run two subagents simultaneously.
+You coordinate the full end-to-end workflow for a GitHub issue. You invoke specialist subagents for Steps 1, 2, 3 (write), 4 (write), and 5. **The test EXECUTION for Steps 3 and 4 is done in true OS-level parallelism via a dedicated shell script** — not via agent invocation — because a single agent context cannot run two subagents simultaneously.
 
 ## Pipeline Shape
 
 ```
-[Step 1: #product-owner]          ← subagent
+[Step 1: #product-owner]              ← subagent (write issue spec)
         ↓
-[Step 2: #developer]              ← subagent
+[Step 2: #developer]                  ← subagent (implement code, commit)
         ↓
-bash scripts/run_parallel_testing.sh <workflow_id>
-   ├── Step 3: Unit Testing       ← background process (PID A)
-   └── Step 4: UI Regression      ← background process (PID B)
+[Step 3: #unit-tester]                ← subagent (write & commit tests ONLY — no running)
+        ↓
+[Step 4: #ui-tester]                  ← subagent (write & commit specs ONLY — no running)
+        ↓
+bash scripts/run_parallel_testing.sh  ← shell script (EXECUTE both test suites in parallel)
+   ├── pytest (Step 3 execution)       ← background process (PID A)
+   └── playwright (Step 4 execution)   ← background process (PID B)
         ↓  (script exits 0 only when BOTH complete)
-[Step 5: #pr-creator]             ← subagent
+[Step 5: #pr-creator]                 ← subagent (create PR)
 ```
+
+> ⚠️ **CRITICAL — DO NOT call #unit-tester or #ui-tester to run tests.** They are write-only agents. Running happens exclusively in `run_parallel_testing.sh`. If you call them to run tests, ui-tester is forced to wait for unit-tester, defeating the parallelism.
 
 ## Your Responsibilities
 
@@ -40,22 +46,35 @@ Invoke `#product-owner`, passing `workflow_id` and `issue_number`.
 ### 3. Step 2 — Developer
 Invoke `#developer`, passing `workflow_id` and `issue_number`.
 - **BLOCKED** → stop pipeline, report gate failure to user. STOP.
-- **COMPLETED** → continue to parallel phase.
+- **COMPLETED** → continue to Step 3.
 
-### 4. Parallel Phase — Steps 3 + 4
-Run the parallel testing script. This is a **single shell command** that launches both steps as background OS processes and waits for both to finish:
+### 4. Step 3 — Unit Tester (Write Phase)
+Invoke `#unit-tester`, passing `workflow_id` and `issue_number`.
+- The unit-tester will **write and commit** new pytest tests. It will **NOT** run them.
+- **BLOCKED** → stop pipeline, report gate failure to user. STOP.
+- **COMPLETED** → continue to Step 4.
+
+### 5. Step 4 — UI Tester (Write Phase)
+Invoke `#ui-tester`, passing `workflow_id` and `issue_number`.
+- The ui-tester will **write and commit** new Playwright specs. It will **NOT** run them.
+- **BLOCKED** → stop pipeline, report gate failure to user. STOP.
+- **COMPLETED** → continue to the parallel execution phase.
+
+### 6. Parallel Execution Phase — Run Steps 3 + 4 simultaneously
+Now that tests and specs are committed, run both suites in true parallel via a **single shell command**:
 
 ```bash
 bash scripts/run_parallel_testing.sh <workflow_id>
 ```
 
 This script:
-- Marks Step 3 and Step 4 IN_PROGRESS simultaneously
-- Runs `pytest` (Step 3) and `playwright` (Step 4) as true parallel background processes
-- Enforces Gate 2 and Gate 3 independently per process
+- Launches `pytest` (Step 3) and `playwright` (Step 4) as true OS-level background processes simultaneously
+- Enforces Gate 2 (pytest) and Gate 3 (Playwright) independently per process
 - Writes COMPLETED or BLOCKED state for each step
 - Exits **0** only when both steps COMPLETED
 - Exits **1** if either step BLOCKED (state file will show which one and why)
+
+> ⚠️ **This is a shell command, NOT a subagent call.** Do not invoke #unit-tester or #ui-tester here — tests must run in parallel, which requires OS-level background processes.
 
 **After the script returns:**
 
@@ -64,7 +83,7 @@ This script:
 | `0` | ✅ Both passed — proceed to Step 5 |
 | `1` | ❌ One or both BLOCKED — read `.workflow/logs/<workflow_id>-*.log` for details, report to user. STOP. |
 
-### 5. Step 5 — PR Creator
+### 7. Step 5 — PR Creator
 Invoke `#pr-creator`, passing `workflow_id` and `issue_number`.
 - **BLOCKED** → stop pipeline, report gate failure to user. STOP.
 - **COMPLETED** → mark workflow complete:
