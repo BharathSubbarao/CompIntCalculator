@@ -109,22 +109,76 @@ def save_and_verify(state: dict, workflow_id: str) -> None:
     )
 
 
-def cmd_check_parallel_complete(workflow_id: str) -> None:
-    """Exit 0 if steps 3 and 4 are both COMPLETED; exit 2 otherwise."""
+def cmd_update_parallel_step(workflow_id: str, parallel_step: str, status: str, error: str | None) -> None:
+    """Update status of a parallel execution run (unit_test_run or ui_test_run)."""
+    if status not in VALID_STEP_STATUSES:
+        print(f"[ERROR] Invalid status '{status}'. Must be one of: {VALID_STEP_STATUSES}", file=sys.stderr)
+        sys.exit(1)
+
     state = load_state(workflow_id)
-    parallel = {s["step_id"]: s["status"] for s in state["steps"] if s["step_id"] in PARALLEL_STEPS}
-    not_done = {sid: st for sid, st in parallel.items() if st != "COMPLETED"}
+    if "parallel_execution" not in state:
+        state["parallel_execution"] = {
+            "unit_test_run": {"label": "pytest (Unit Tests)", "status": "PENDING",
+                              "started_at": None, "ended_at": None, "duration_seconds": None, "error": None},
+            "ui_test_run": {"label": "playwright (UI Regression)", "status": "PENDING",
+                            "started_at": None, "ended_at": None, "duration_seconds": None, "error": None},
+        }
+
+    run = state["parallel_execution"].get(parallel_step)
+    if run is None:
+        print(f"[ERROR] Unknown parallel step '{parallel_step}'. Must be 'unit_test_run' or 'ui_test_run'.", file=sys.stderr)
+        sys.exit(1)
+
+    ts = now_utc()
+    run["status"] = status
+
+    if status == "IN_PROGRESS":
+        run["started_at"] = ts
+        run["ended_at"] = None
+        run["duration_seconds"] = None
+        run["error"] = None
+        state["status"] = "IN_PROGRESS"
+
+    elif status == "COMPLETED":
+        run["ended_at"] = ts
+        if run.get("started_at"):
+            started = datetime.fromisoformat(run["started_at"])
+            ended = datetime.fromisoformat(ts)
+            run["duration_seconds"] = round((ended - started).total_seconds(), 1)
+
+    elif status == "BLOCKED":
+        run["ended_at"] = ts
+        if run.get("started_at"):
+            started = datetime.fromisoformat(run["started_at"])
+            ended = datetime.fromisoformat(ts)
+            run["duration_seconds"] = round((ended - started).total_seconds(), 1)
+        run["error"] = error or "Blocked — no error message provided"
+        state["status"] = "BLOCKED"
+
+    state["updated_at"] = ts
+    save_and_verify(state, workflow_id)
+
+
+def cmd_check_parallel_complete(workflow_id: str) -> None:
+    """Exit 0 if both parallel execution runs are COMPLETED; exit 2 otherwise."""
+    state = load_state(workflow_id)
+    par_exec = state.get("parallel_execution", {})
+    runs = {
+        "unit_test_run": par_exec.get("unit_test_run", {}).get("status", "PENDING"),
+        "ui_test_run": par_exec.get("ui_test_run", {}).get("status", "PENDING"),
+    }
+    not_done = {k: v for k, v in runs.items() if v != "COMPLETED"}
     if not_done:
-        details = ", ".join(f"Step {sid}={st}" for sid, st in sorted(not_done.items()))
+        details = ", ".join(f"{k}={v}" for k, v in sorted(not_done.items()))
         print(
             f"[WAIT] Parallel gate not met for workflow_id={workflow_id}: {details}. "
-            "Step 5 (PR Creator) must not start until both Step 3 and Step 4 are COMPLETED.",
+            "Step 5 (PR Creator) must not start until both unit_test_run and ui_test_run are COMPLETED.",
             file=sys.stderr,
         )
         sys.exit(2)
     print(
         f"[OK] Parallel gate met for workflow_id={workflow_id}: "
-        "Step 3 (Unit Testing) and Step 4 (UI Regression) are both COMPLETED. "
+        "unit_test_run and ui_test_run are both COMPLETED. "
         "Step 5 (PR Creator) may now start."
     )
 
@@ -160,6 +214,24 @@ def cmd_init(workflow_id: str, issue_number: int) -> None:
             }
             for sid, (name, persona) in STEP_NAMES.items()
         ],
+        "parallel_execution": {
+            "unit_test_run": {
+                "label": "pytest (Unit Tests)",
+                "status": "PENDING",
+                "started_at": None,
+                "ended_at": None,
+                "duration_seconds": None,
+                "error": None,
+            },
+            "ui_test_run": {
+                "label": "playwright (UI Regression)",
+                "status": "PENDING",
+                "started_at": None,
+                "ended_at": None,
+                "duration_seconds": None,
+                "error": None,
+            },
+        },
     }
     save_and_verify(state, workflow_id)
 
@@ -223,6 +295,11 @@ def main() -> None:
     parser.add_argument("--step", type=int, choices=[1, 2, 3, 4, 5], help="Step number to update")
     parser.add_argument("--status", choices=list(VALID_STEP_STATUSES), help="New status for the step")
     parser.add_argument("--error", help="Error message (required when --status BLOCKED)")
+    parser.add_argument(
+        "--parallel-step",
+        choices=["unit_test_run", "ui_test_run"],
+        help="Update a parallel execution run status (unit_test_run or ui_test_run)",
+    )
     parser.add_argument("--complete", action="store_true", help="Mark top-level workflow as COMPLETED")
     parser.add_argument(
         "--check-parallel-complete",
@@ -242,13 +319,18 @@ def main() -> None:
     elif args.check_parallel_complete:
         cmd_check_parallel_complete(args.workflow_id)
 
+    elif args.parallel_step and args.status:
+        if args.status == "BLOCKED" and not args.error:
+            parser.error("--error is required when --status is BLOCKED")
+        cmd_update_parallel_step(args.workflow_id, args.parallel_step, args.status, args.error)
+
     elif args.step and args.status:
         if args.status == "BLOCKED" and not args.error:
             parser.error("--error is required when --status is BLOCKED")
         cmd_update_step(args.workflow_id, args.step, args.status, args.error)
 
     else:
-        parser.error("Provide --init, --complete, --check-parallel-complete, or both --step and --status")
+        parser.error("Provide --init, --complete, --check-parallel-complete, --parallel-step with --status, or both --step and --status")
 
 
 if __name__ == "__main__":

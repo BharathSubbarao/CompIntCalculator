@@ -25,12 +25,12 @@ STATE_SCRIPT="python3 scripts/update_workflow_state.py"
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
 
 # ---------------------------------------------------------------------------
-# Mark both steps IN_PROGRESS simultaneously
+# Mark both parallel execution runs IN_PROGRESS simultaneously
 # ---------------------------------------------------------------------------
-echo "[$(ts)] Marking Step 3 (Unit Testing) IN_PROGRESS..."
-${STATE_SCRIPT} --workflow-id "${WORKFLOW_ID}" --step 3 --status IN_PROGRESS
-echo "[$(ts)] Marking Step 4 (UI Regression) IN_PROGRESS..."
-${STATE_SCRIPT} --workflow-id "${WORKFLOW_ID}" --step 4 --status IN_PROGRESS
+echo "[$(ts)] Marking unit_test_run IN_PROGRESS..."
+${STATE_SCRIPT} --workflow-id "${WORKFLOW_ID}" --parallel-step unit_test_run --status IN_PROGRESS
+echo "[$(ts)] Marking ui_test_run IN_PROGRESS..."
+${STATE_SCRIPT} --workflow-id "${WORKFLOW_ID}" --parallel-step ui_test_run --status IN_PROGRESS
 
 # ---------------------------------------------------------------------------
 # Step 3 — Unit Testing (background process)
@@ -48,7 +48,7 @@ run_unit_tests() {
       MSG="Gate 2 BLOCKED: No unit test was added or modified for this feature in tests/test_app.py."
       echo "[GATE 2 FAIL] ${MSG}"
       python3 scripts/update_workflow_state.py \
-        --workflow-id "${wf_id}" --step 3 --status BLOCKED \
+        --workflow-id "${wf_id}" --parallel-step unit_test_run --status BLOCKED \
         --error "${MSG}"
       echo "===== STEP 3 BLOCKED $(ts) ====="
       exit 1
@@ -64,7 +64,7 @@ run_unit_tests() {
       MSG="Gate 2 BLOCKED: Unit tests failed (exit ${PYTEST_EXIT}). Fix all failures before proceeding."
       echo "[GATE 2 FAIL] ${MSG}"
       python3 scripts/update_workflow_state.py \
-        --workflow-id "${wf_id}" --step 3 --status BLOCKED \
+        --workflow-id "${wf_id}" --parallel-step unit_test_run --status BLOCKED \
         --error "${MSG}"
       echo "===== STEP 3 BLOCKED $(ts) ====="
       exit 1
@@ -72,7 +72,7 @@ run_unit_tests() {
 
     echo "[GATE 2 OK] All unit tests passed."
     python3 scripts/update_workflow_state.py \
-      --workflow-id "${wf_id}" --step 3 --status COMPLETED
+      --workflow-id "${wf_id}" --parallel-step unit_test_run --status COMPLETED
     echo "===== STEP 3 COMPLETED $(ts) ====="
     exit 0
   } 2>&1 | tee -a "${log_file}"
@@ -94,7 +94,7 @@ run_ui_tests() {
       MSG="Gate 3 BLOCKED: No Playwright regression spec was added or modified for this feature in ui-tests/."
       echo "[GATE 3 FAIL] ${MSG}"
       python3 scripts/update_workflow_state.py \
-        --workflow-id "${wf_id}" --step 4 --status BLOCKED \
+        --workflow-id "${wf_id}" --parallel-step ui_test_run --status BLOCKED \
         --error "${MSG}"
       echo "===== STEP 4 BLOCKED $(ts) ====="
       exit 1
@@ -110,7 +110,7 @@ run_ui_tests() {
       MSG="Gate 3 BLOCKED: UI regression tests failed (exit ${PLAYWRIGHT_EXIT}). Fix all failures before proceeding."
       echo "[GATE 3 FAIL] ${MSG}"
       python3 scripts/update_workflow_state.py \
-        --workflow-id "${wf_id}" --step 4 --status BLOCKED \
+        --workflow-id "${wf_id}" --parallel-step ui_test_run --status BLOCKED \
         --error "${MSG}"
       echo "===== STEP 4 BLOCKED $(ts) ====="
       exit 1
@@ -118,7 +118,7 @@ run_ui_tests() {
 
     echo "[GATE 3 OK] All UI regression tests passed."
     python3 scripts/update_workflow_state.py \
-      --workflow-id "${wf_id}" --step 4 --status COMPLETED
+      --workflow-id "${wf_id}" --parallel-step ui_test_run --status COMPLETED
     echo "===== STEP 4 COMPLETED $(ts) ====="
     exit 0
   } 2>&1 | tee -a "${log_file}"

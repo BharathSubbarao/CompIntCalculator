@@ -111,32 +111,81 @@ def render_step_card(step: dict[str, Any]) -> None:
     )
 
 
-def render_parallel_execution_banner() -> None:
-    """Render the parallel execution phase separator between Step 4 and Step 5."""
+def render_parallel_run_card(label: str, icon: str, run: dict[str, Any]) -> None:
+    """Render a single parallel execution run card (unit_test_run or ui_test_run)."""
+    status = run.get("status", "PENDING")
+    color = STATUS_COLOR.get(status, "#888")
+    status_icon = STATUS_ICON.get(status, "⬜")
+    duration = format_duration(run.get("duration_seconds"))
+    started = format_time(run.get("started_at"))
+    ended = format_time(run.get("ended_at"))
+    error = run.get("error")
+    bg = "#fff8e1" if status == "IN_PROGRESS" else "#f8f9fa"
+
     st.markdown(
-        """
+        f"""
         <div style="
-            border: 2px dashed #1a73e8;
+            border: 2px solid {color};
             border-radius: 10px;
-            padding: 10px 16px;
-            margin-bottom: 8px;
-            background: #e8f0fe;
-            text-align: center;
+            padding: 10px 14px;
+            background: {bg};
         ">
-            <div style="font-size:1.0em; font-weight:600; color:#1a73e8;">
-                🔀 Parallel Execution Phase
+            <div style="font-size:1.0em; font-weight:600;">{status_icon} {icon} {label}</div>
+            <div style="margin-top:5px; font-size:0.85em; color:{color}; font-weight:600;">
+                {status}
             </div>
-            <div style="font-size:0.82em; color:#444; margin-top:4px;">
-                <code>bash scripts/run_parallel_testing.sh</code><br>
-                pytest (Step 3) &nbsp;‖&nbsp; playwright (Step 4) — true OS-level parallelism
+            <div style="font-size:0.8em; color:#666; margin-top:4px;">
+                ⏱ {duration} &nbsp;|&nbsp; Start: {started} &nbsp;|&nbsp; End: {ended}
             </div>
+            {f'<div style="margin-top:6px; color:#dc3545; font-size:0.8em;">🚫 {error}</div>' if error else ''}
         </div>
         """,
         unsafe_allow_html=True,
     )
 
 
-def render_pipeline(steps: list[dict[str, Any]]) -> None:
+def render_parallel_execution_banner(parallel_execution: dict[str, Any] | None) -> None:
+    """Render the parallel execution phase with live status cards for each test suite."""
+    st.markdown(
+        """
+        <div style="
+            border: 2px dashed #1a73e8;
+            border-radius: 10px;
+            padding: 8px 16px 4px 16px;
+            margin-bottom: 6px;
+            background: #e8f0fe;
+            text-align: center;
+        ">
+            <div style="font-size:1.0em; font-weight:600; color:#1a73e8;">
+                🔀 Parallel Execution Phase
+            </div>
+            <div style="font-size:0.78em; color:#555; margin-top:2px; margin-bottom:6px;">
+                <code>bash scripts/run_parallel_testing.sh</code> — true OS-level parallelism
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    unit_run = (parallel_execution or {}).get("unit_test_run")
+    ui_run = (parallel_execution or {}).get("ui_test_run")
+
+    if unit_run is not None or ui_run is not None:
+        col_unit, col_ui = st.columns(2)
+        with col_unit:
+            render_parallel_run_card("pytest", "🧪", unit_run or {})
+        with col_ui:
+            render_parallel_run_card("playwright", "🎭", ui_run or {})
+    else:
+        # Fallback for old state files without parallel_execution tracking
+        st.markdown(
+            "<div style='text-align:center; font-size:0.82em; color:#888; padding-bottom:6px;'>"
+            "pytest &nbsp;‖&nbsp; playwright — status not tracked in this workflow run</div>",
+            unsafe_allow_html=True,
+        )
+
+
+def render_pipeline(steps: list[dict[str, Any]], parallel_execution: dict[str, Any] | None) -> None:
     """Render the full pipeline: Steps 1–4 sequential (write phases), parallel execution banner, Step 5."""
     steps_by_id = {s["step_id"]: s for s in steps}
     arrow = "<div style='text-align:center; font-size:1.4em; color:#aaa;'>↓</div>"
@@ -157,8 +206,8 @@ def render_pipeline(steps: list[dict[str, Any]]) -> None:
         render_step_card(step)
         st.markdown(arrow, unsafe_allow_html=True)
 
-    # Parallel execution phase banner (between Step 4 write and Step 5)
-    render_parallel_execution_banner()
+    # Parallel execution phase with live status cards
+    render_parallel_execution_banner(parallel_execution)
     st.markdown(arrow, unsafe_allow_html=True)
 
     # Step 5 — sequential
@@ -209,13 +258,18 @@ def main() -> None:
 
     selected = next((w for w in workflows if w.get("workflow_id") == selected_id), workflows[0])
     steps = selected.get("steps", [])
+    parallel_execution: dict[str, Any] = selected.get("parallel_execution", {})
 
-    # Summary metrics
+    # Summary metrics — include parallel execution runs in active/blocked/completed counts
     overall_status = selected.get("status", "PENDING")
-    active_agents = sum(1 for s in steps if s.get("status") == "IN_PROGRESS")
-    blocked_count = sum(1 for s in steps if s.get("status") == "BLOCKED")
+    par_runs = list(parallel_execution.values()) if parallel_execution else []
+    active_agents = sum(1 for s in steps if s.get("status") == "IN_PROGRESS") + \
+                    sum(1 for r in par_runs if r.get("status") == "IN_PROGRESS")
+    blocked_count = sum(1 for s in steps if s.get("status") == "BLOCKED") + \
+                    sum(1 for r in par_runs if r.get("status") == "BLOCKED")
     completed_count = sum(1 for s in steps if s.get("status") == "COMPLETED")
-    total_duration = sum(s.get("duration_seconds") or 0 for s in steps)
+    total_duration = sum(s.get("duration_seconds") or 0 for s in steps) + \
+                     sum(r.get("duration_seconds") or 0 for r in par_runs)
 
     st.markdown(f"### Issue #{selected.get('issue_number', '?')} — `{selected_id}`")
 
@@ -233,7 +287,7 @@ def main() -> None:
 
     with left:
         st.subheader("Pipeline")
-        render_pipeline(steps)
+        render_pipeline(steps, parallel_execution)
 
     with right:
         st.subheader("Step Detail")
@@ -252,14 +306,21 @@ def main() -> None:
                 "error": s.get("error"),
             })
 
-        # Blocked errors panel
+        # Blocked errors panel — steps and parallel execution runs
         blocked_steps = [s for s in steps if s.get("status") == "BLOCKED"]
-        if blocked_steps:
+        blocked_runs = [
+            (key, r) for key, r in parallel_execution.items() if r.get("status") == "BLOCKED"
+        ] if parallel_execution else []
+        if blocked_steps or blocked_runs:
             st.markdown("---")
-            st.error(f"⛔ Workflow BLOCKED — {len(blocked_steps)} gate failure(s)")
+            st.error(f"⛔ Workflow BLOCKED — {len(blocked_steps) + len(blocked_runs)} gate failure(s)")
             for s in blocked_steps:
                 st.markdown(f"**Step {s['step_id']}: {s['name']}**")
                 st.code(str(s.get("error", "Unknown error")), language="text")
+            for key, r in blocked_runs:
+                label = "pytest (Unit Tests)" if key == "unit_test_run" else "playwright (UI Regression)"
+                st.markdown(f"**Parallel Execution — {label}**")
+                st.code(str(r.get("error", "Unknown error")), language="text")
 
     st.markdown("---")
     st.caption(
