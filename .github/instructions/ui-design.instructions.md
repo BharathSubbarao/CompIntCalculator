@@ -5,29 +5,32 @@ description: "UI/UX design system for the Compound Interest Calculator — color
 
 # UI/UX Design System — Compound Interest Calculator
 
-## Color Scheme (Axis Bank Brand)
+## Color Scheme (Dark Teal Wealth)
 
-| Role             | Hex       | Used For                                         |
-|------------------|-----------|--------------------------------------------------|
-| Primary          | `#97144D` | Sidebar bg, metric cards, buttons, table headers, `h1` border |
-| Primary Dark     | `#6B0F38` | Hover states, footer background, captions        |
-| Primary Light    | `#C41E5B` | Highlights and accents                           |
-| Page Background  | `#E8F0F9` | Main content area background                     |
-| Text on Dark     | `#F5F5F5` | Labels and text on colored backgrounds           |
-| Text on Light    | `#1A1A1A` | Body text on white/grey backgrounds              |
-| White            | `#FFFFFF` | Sidebar input fields, button text                |
+| Role              | Hex       | Constant            | Used For                                              |
+|-------------------|-----------|---------------------|-------------------------------------------------------|
+| Page Background   | `#1A1F2E` | `THEME_BG`          | Main content area background, header bar              |
+| Sidebar Background| `#222836` | `THEME_SIDEBAR`     | Sidebar bg, footer background                         |
+| Primary Teal      | `#0D9488` | `THEME_TEAL`        | Metric cards, buttons, `h2`/`h3`, `h1` border         |
+| Teal Dark         | `#0F766E` | `THEME_TEAL_DARK`   | Button hover, table header                            |
+| Emerald Highlight | `#34D399` | `THEME_TEAL_LIGHT`  | `h1` color, footer links, highlights                  |
+| Primary Text      | `#E8EAF0` | `THEME_TEXT_PRIMARY`| Body text, sidebar labels, metric labels              |
+| Muted Text        | `#9BA3B2` | `THEME_TEXT_MUTED`  | Captions, footer text                                 |
+| White             | `#FFFFFF` | `THEME_WHITE`       | Sidebar input fields, button text, metric values      |
+| Input Text        | `#1A1A1A` | `THEME_INPUT_TEXT`  | Dark text inside input fields                         |
 
-> Theme follows system default (light → `plotly_white`, dark → `plotly_dark` for Plotly charts).
+> Plotly chart template is always `plotly_dark` to match the dark background.
 
 ---
 
 ## Typography
 
-- **h1**: `font-weight: 800`, color `#97144D`, `border-bottom: 3px solid #97144D`
-- **h2 / h3**: `font-weight: 700`, color `#6B0F38`
-- **Metric values**: `font-size: 1.6rem`, `font-weight: 800`, white on `#97144D` card
-- **Metric labels**: `font-weight: 600`, color `#F5F5F5`
-- **Captions / footer**: `font-weight: 500`, color `#6B0F38`
+- **h1**: `font-weight: 800`, color `#34D399` (emerald), `border-bottom: 3px solid #0D9488`
+- **h2 / h3**: `font-weight: 700`, color `#0D9488` (teal)
+- **Body text**: color `#E8EAF0`
+- **Metric values**: `font-size: 1.6rem`, `font-weight: 800`, white on `#0D9488` card
+- **Metric labels**: `font-weight: 600`, color `#E8EAF0`
+- **Captions / footer**: `font-weight: 500`, color `#9BA3B2`
 
 ---
 
@@ -45,21 +48,21 @@ description: "UI/UX design system for the Compound Interest Calculator — color
 
 ### Sidebar inputs
 - Background: `#FFFFFF`, text: `#1A1A1A`, `border-radius: 4px`
-- Labels: `#F5F5F5`, `font-weight: 600`
+- Labels: `#E8EAF0`, `font-weight: 600`
 
 ### Metric cards
-- Background: `#97144D`, `border-radius: 8px`, `padding: 16px 20px`
+- Background: `#0D9488`, `border-radius: 8px`, `padding: 16px 20px`
 - Value text: `#FFFFFF`, `font-weight: 800`, `font-size: 1.6rem`
 
 ### Buttons
-- Default: `background #97144D`, white bold text, no border, `border-radius: 4px`
-- Hover: `background #6B0F38`
+- Default: `background #0D9488`, white bold text, no border, `border-radius: 4px`
+- Hover: `background #0F766E`
 
 ### Data table
-- Header row: `background #97144D`, white bold text
+- Header row: `background #0F766E`, white bold text
 
 ### Plotly chart
-- Template: `plotly_white` (light mode) / `plotly_dark` (dark mode) — resolved at runtime via `st.get_option("theme.base")`
+- Template: always `plotly_dark` to match the dark background
 
 ---
 

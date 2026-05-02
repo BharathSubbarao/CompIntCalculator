@@ -16,118 +16,125 @@ def get_plotly_template() -> str:
     return "plotly_dark" if base_theme == "dark" else "plotly_white"
 
 
-# ── Axis Bank brand color palette ─────────────────────────────────────────────
-AXIS_RED = "#97144D"          # Primary deep-red/maroon brand color
-AXIS_RED_DARK = "#6B0F38"     # Darker variant for hover / footer background
-AXIS_RED_LIGHT = "#C41E5B"    # Lighter tint for highlights
-AXIS_ACCENT = "#E8F0F9"       # Light blue-grey page background
-AXIS_WHITE = "#FFFFFF"
-AXIS_TEXT_LIGHT = "#F5F5F5"
-AXIS_TEXT_DARK = "#1A1A1A"
+# ── Dark Teal Wealth color palette ────────────────────────────────────────────
+THEME_BG = "#1A1F2E"           # Deep charcoal-navy page background
+THEME_SIDEBAR = "#222836"      # Slightly lighter dark for sidebar
+THEME_TEAL = "#0D9488"         # Primary teal accent
+THEME_TEAL_DARK = "#0F766E"    # Deeper teal for hover / table headers
+THEME_TEAL_LIGHT = "#34D399"   # Emerald green pop for highlights
+THEME_TEXT_PRIMARY = "#E8EAF0" # Near-white primary text
+THEME_TEXT_MUTED = "#9BA3B2"   # Muted grey secondary text
+THEME_WHITE = "#FFFFFF"
+THEME_INPUT_TEXT = "#1A1A1A"   # Dark text inside input fields
 
 
-def inject_axis_bank_styles() -> None:
-    """Inject CSS to apply the Axis Bank bold color scheme across the app UI."""
+def inject_app_styles() -> None:
+    """Inject CSS to apply the Dark Teal Wealth color scheme across the app UI."""
     css = f"""
     <style>
         /* ── Page background ── */
         .stApp {{
-            background-color: {AXIS_ACCENT};
+            background-color: {THEME_BG};
         }}
 
         /* ── Top header bar ── */
         header[data-testid="stHeader"] {{
-            background-color: {AXIS_RED} !important;
+            background-color: {THEME_BG} !important;
         }}
 
         /* ── App title rendered via st.title ── */
         h1 {{
-            color: {AXIS_RED} !important;
+            color: {THEME_TEAL_LIGHT} !important;
             font-weight: 800 !important;
-            border-bottom: 3px solid {AXIS_RED};
+            border-bottom: 3px solid {THEME_TEAL};
             padding-bottom: 8px;
         }}
 
         /* ── Section headings (st.subheader) ── */
         h2, h3 {{
-            color: {AXIS_RED_DARK} !important;
+            color: {THEME_TEAL} !important;
             font-weight: 700 !important;
+        }}
+
+        /* ── Body text ── */
+        p, li, span, label {{
+            color: {THEME_TEXT_PRIMARY};
         }}
 
         /* ── Sidebar background and text ── */
         section[data-testid="stSidebar"] {{
-            background-color: {AXIS_RED} !important;
+            background-color: {THEME_SIDEBAR} !important;
         }}
         section[data-testid="stSidebar"] * {{
-            color: {AXIS_WHITE} !important;
+            color: {THEME_TEXT_PRIMARY} !important;
         }}
         section[data-testid="stSidebar"] .stSelectbox label,
         section[data-testid="stSidebar"] .stNumberInput label,
         section[data-testid="stSidebar"] h1,
         section[data-testid="stSidebar"] h2,
         section[data-testid="stSidebar"] h3 {{
-            color: {AXIS_TEXT_LIGHT} !important;
+            color: {THEME_TEXT_PRIMARY} !important;
             font-weight: 600 !important;
         }}
         /* Sidebar input fields */
         section[data-testid="stSidebar"] input,
         section[data-testid="stSidebar"] .stSelectbox > div > div {{
-            background-color: {AXIS_WHITE} !important;
-            color: {AXIS_TEXT_DARK} !important;
+            background-color: {THEME_WHITE} !important;
+            color: {THEME_INPUT_TEXT} !important;
             border-radius: 4px;
         }}
 
         /* ── Metric cards ── */
         div[data-testid="stMetric"] {{
-            background-color: {AXIS_RED};
+            background-color: {THEME_TEAL};
             border-radius: 8px;
             padding: 16px 20px;
-            color: {AXIS_WHITE};
+            color: {THEME_WHITE};
         }}
         div[data-testid="stMetric"] label,
         div[data-testid="stMetric"] div[data-testid="stMetricLabel"] {{
-            color: {AXIS_TEXT_LIGHT} !important;
+            color: {THEME_TEXT_PRIMARY} !important;
             font-weight: 600 !important;
         }}
         div[data-testid="stMetric"] div[data-testid="stMetricValue"] {{
-            color: {AXIS_WHITE} !important;
+            color: {THEME_WHITE} !important;
             font-weight: 800 !important;
             font-size: 1.6rem !important;
         }}
 
         /* ── Primary buttons ── */
         .stButton > button {{
-            background-color: {AXIS_RED} !important;
-            color: {AXIS_WHITE} !important;
+            background-color: {THEME_TEAL} !important;
+            color: {THEME_WHITE} !important;
             border: none !important;
             border-radius: 4px !important;
             font-weight: 700 !important;
             padding: 8px 20px !important;
         }}
         .stButton > button:hover {{
-            background-color: {AXIS_RED_DARK} !important;
+            background-color: {THEME_TEAL_DARK} !important;
         }}
 
         /* ── Dataframe / table header ── */
         thead tr th {{
-            background-color: {AXIS_RED} !important;
-            color: {AXIS_WHITE} !important;
+            background-color: {THEME_TEAL_DARK} !important;
+            color: {THEME_WHITE} !important;
             font-weight: 700 !important;
         }}
 
         /* ── Caption / footer text ── */
         .stCaption, div[data-testid="stCaptionContainer"] p {{
-            color: {AXIS_RED_DARK} !important;
+            color: {THEME_TEXT_MUTED} !important;
             font-weight: 500;
         }}
 
         /* ── Footer banner ── */
         footer {{
-            background-color: {AXIS_RED_DARK} !important;
-            color: {AXIS_TEXT_LIGHT} !important;
+            background-color: {THEME_SIDEBAR} !important;
+            color: {THEME_TEXT_MUTED} !important;
         }}
         footer a {{
-            color: {AXIS_TEXT_LIGHT} !important;
+            color: {THEME_TEAL_LIGHT} !important;
         }}
     </style>
     """
@@ -597,7 +604,7 @@ def render_results(
 
 def main() -> None:
     st.set_page_config(page_title="Compound Interest Calculator", layout="wide")
-    inject_axis_bank_styles()
+    inject_app_styles()
 
     (
         money_principal,
