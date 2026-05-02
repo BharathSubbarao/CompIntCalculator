@@ -10,9 +10,6 @@ import streamlit.components.v1 as components
 
 STATE_DIR = Path(".workflow/state")
 
-# Steps that run in parallel — rendered side-by-side in the pipeline view.
-PARALLEL_STEPS = {3, 4}
-
 STATUS_ICON = {
     "PENDING": "⬜",
     "IN_PROGRESS": "🟡",
@@ -114,40 +111,66 @@ def render_step_card(step: dict[str, Any]) -> None:
     )
 
 
+def render_parallel_execution_banner() -> None:
+    """Render the parallel execution phase separator between Step 4 and Step 5."""
+    st.markdown(
+        """
+        <div style="
+            border: 2px dashed #1a73e8;
+            border-radius: 10px;
+            padding: 10px 16px;
+            margin-bottom: 8px;
+            background: #e8f0fe;
+            text-align: center;
+        ">
+            <div style="font-size:1.0em; font-weight:600; color:#1a73e8;">
+                🔀 Parallel Execution Phase
+            </div>
+            <div style="font-size:0.82em; color:#444; margin-top:4px;">
+                <code>bash scripts/run_parallel_testing.sh</code><br>
+                pytest (Step 3) &nbsp;‖&nbsp; playwright (Step 4) — true OS-level parallelism
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+
 def render_pipeline(steps: list[dict[str, Any]]) -> None:
-    """Render the full pipeline with parallel step 3+4 side-by-side."""
-    sequential_before = [s for s in steps if s["step_id"] < 3]
-    parallel = [s for s in steps if s["step_id"] in PARALLEL_STEPS]
-    sequential_after = [s for s in steps if s["step_id"] > 4]
+    """Render the full pipeline: Steps 1–4 sequential (write phases), parallel execution banner, Step 5."""
+    steps_by_id = {s["step_id"]: s for s in steps}
+    arrow = "<div style='text-align:center; font-size:1.4em; color:#aaa;'>↓</div>"
 
-    # Steps 1 and 2
-    for step in sequential_before:
+    # Steps 1 and 2 — sequential
+    for step_id in [1, 2]:
+        if step := steps_by_id.get(step_id):
+            render_step_card(step)
+            st.markdown(arrow, unsafe_allow_html=True)
+
+    # Step 3 — write-only (sequential)
+    if step := steps_by_id.get(3):
         render_step_card(step)
-        st.markdown("<div style='text-align:center; font-size:1.4em; color:#aaa;'>↓</div>", unsafe_allow_html=True)
+        st.markdown(arrow, unsafe_allow_html=True)
 
-    # Steps 3 + 4 side by side
-    if parallel:
-        st.markdown(
-            "<div style='text-align:center; font-size:0.8em; color:#888; margin-bottom:4px;'>"
-            "— parallel execution —</div>",
-            unsafe_allow_html=True,
-        )
-        cols = st.columns(len(parallel))
-        for col, step in zip(cols, parallel):
-            with col:
-                render_step_card(step)
-        st.markdown("<div style='text-align:center; font-size:1.4em; color:#aaa;'>↓</div>", unsafe_allow_html=True)
+    # Step 4 — write-only (sequential)
+    if step := steps_by_id.get(4):
+        render_step_card(step)
+        st.markdown(arrow, unsafe_allow_html=True)
 
-    # Step 5
-    for step in sequential_after:
+    # Parallel execution phase banner (between Step 4 write and Step 5)
+    render_parallel_execution_banner()
+    st.markdown(arrow, unsafe_allow_html=True)
+
+    # Step 5 — sequential
+    if step := steps_by_id.get(5):
         render_step_card(step)
 
 
 def main() -> None:
-    st.set_page_config(page_title="AI Workflow Dashboard", layout="wide")
+    st.set_page_config(page_title="AI Orchestration Dashboard", layout="wide")
 
-    st.title("🤖 AI Workflow Dashboard")
-    st.caption("Multi-agent orchestration — live pipeline view")
+    st.title("🤖 AI Orchestration Dashboard")
+    st.caption("Multi-agent pipeline — sequential write phases → parallel test execution")
 
     auto_refresh = st.sidebar.toggle("Auto-refresh", value=True)
     refresh_seconds = st.sidebar.slider(
@@ -241,7 +264,7 @@ def main() -> None:
     st.markdown("---")
     st.caption(
         f"Updated: {format_time(selected.get('updated_at'))}  |  "
-        "Pipeline: Step 1 → Step 2 → (Step 3 ‖ Step 4) → Step 5"
+        "Pipeline: Step 1 → Step 2 → Step 3 (write) → Step 4 (write) → [pytest ‖ playwright] → Step 5"
     )
 
 

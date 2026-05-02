@@ -25,8 +25,15 @@ Exits with code 0 on success. Exits with code 2 if parallel gate not met.
 Prints the updated status line for verification.
 
 Pipeline shape:
-  Step 1 (product_owner) -> Step 2 (developer) -> Steps 3+4 (unit_tester + ui_tester in PARALLEL)
-  -> [both COMPLETED] -> Step 5 (pr_creator)
+  Step 1 (product_owner)  → sequential
+  Step 2 (developer)      → sequential
+  Step 3 (unit_tester)    → sequential  [WRITE PHASE: writes & commits tests, does NOT run them]
+  Step 4 (ui_tester)      → sequential  [WRITE PHASE: writes & commits specs, does NOT run them]
+  ── Parallel Execution Phase ──────────────────────────────────────────────────
+  bash scripts/run_parallel_testing.sh  → pytest (Step 3) ‖ playwright (Step 4) in parallel
+  (both Steps 3 and 4 must be COMPLETED before Step 5 may start)
+  ──────────────────────────────────────────────────────────────────────────────
+  Step 5 (pr_creator)     → sequential
 """
 
 from __future__ import annotations
@@ -47,15 +54,17 @@ STEP_NAMES = {
     5: ("Pull Request Creation", "pr_creator"),
 }
 
-# Steps 3 and 4 run in parallel; step 5 depends on both completing.
+# Steps 3 and 4 must both be COMPLETED (after parallel execution) before Step 5 may start.
 PARALLEL_STEPS = {3, 4}
 
 # Execution mode stored per-step in state JSON so the dashboard can render correctly.
+# Steps 3 and 4 are sequential write-only phases (subagents write & commit tests/specs).
+# The parallel execution of both test suites is handled externally by run_parallel_testing.sh.
 EXECUTION_MODE = {
     1: "sequential",
     2: "sequential",
-    3: "parallel",
-    4: "parallel",
+    3: "sequential",
+    4: "sequential",
     5: "sequential",
 }
 
