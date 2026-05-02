@@ -135,6 +135,54 @@ class TestFrequencyImpact:
         assert "Semi-Monthly" in app.FREQUENCY_OPTIONS
         assert app.FREQUENCY_OPTIONS["Semi-Monthly"] == 24
 
+    # ------------------------------------------------------------------
+    # Issue #37 – Bi-Weekly (26 periods/year)
+    # ------------------------------------------------------------------
+
+    def test_bi_weekly_mapping_exists(self) -> None:
+        # Issue #37: "Bi-Weekly" must be present in FREQUENCY_OPTIONS
+        assert "Bi-Weekly" in app.FREQUENCY_OPTIONS
+
+    def test_bi_weekly_mapped_to_26_periods(self) -> None:
+        # Issue #37: Bi-Weekly must map to exactly 26 compounding periods per year
+        assert app.FREQUENCY_OPTIONS["Bi-Weekly"] == 26
+
+    def test_bi_weekly_frequency_compounds_correctly(self) -> None:
+        # Issue #37: Bi-Weekly (n=26) must produce a higher balance than
+        # Semi-Monthly (n=24) and a lower balance than Weekly (n=52).
+        semi_monthly = _balance(10000.0, 0.0, 6.0, 10.0, 24)
+        bi_weekly    = _balance(10000.0, 0.0, 6.0, 10.0, 26)
+        weekly       = _balance(10000.0, 0.0, 6.0, 10.0, 52)
+        assert bi_weekly > semi_monthly, (
+            "Bi-Weekly (n=26) should compound more than Semi-Monthly (n=24)"
+        )
+        assert bi_weekly < weekly, (
+            "Bi-Weekly (n=26) should compound less than Weekly (n=52)"
+        )
+
+    def test_bi_weekly_balance_formula(self) -> None:
+        # Issue #37: Verify the exact compound formula for n=26 over 1 year at 12%
+        # FV = P * (1 + 0.12/26)^26
+        principal = 1000.0
+        rate = 12.0
+        years = 1.0
+        n = 26
+        expected = principal * (1 + (rate / 100) / n) ** (n * years)
+        result = _balance(principal, 0.0, rate, years, n)
+        assert isclose(result, expected, rel_tol=1e-12)
+
+    def test_bi_weekly_ordered_between_semi_monthly_and_weekly_in_options(self) -> None:
+        # Issue #37: FREQUENCY_OPTIONS must contain "Bi-Weekly" between
+        # "Semi-Monthly" and "Weekly" in iteration order.
+        keys = list(app.FREQUENCY_OPTIONS.keys())
+        assert "Bi-Weekly" in keys
+        assert keys.index("Bi-Weekly") > keys.index("Semi-Monthly"), (
+            '"Bi-Weekly" must appear after "Semi-Monthly" in FREQUENCY_OPTIONS'
+        )
+        assert keys.index("Bi-Weekly") < keys.index("Weekly"), (
+            '"Bi-Weekly" must appear before "Weekly" in FREQUENCY_OPTIONS'
+        )
+
     def test_semi_monthly_frequency_compounds_correctly(self) -> None:
         # Issue #16: Semi-Monthly (n=24) should produce a higher balance than
         # Monthly (n=12) and a lower balance than Weekly (n=52) at a positive rate.
