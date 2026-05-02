@@ -144,74 +144,37 @@ def render_parallel_run_card(label: str, icon: str, run: dict[str, Any]) -> None
     )
 
 
-def render_parallel_execution_banner(parallel_execution: dict[str, Any] | None) -> None:
-    """Render the parallel execution phase with live status cards for each test suite."""
-    st.markdown(
-        """
-        <div style="
-            border: 2px dashed #1a73e8;
-            border-radius: 10px;
-            padding: 8px 16px 4px 16px;
-            margin-bottom: 6px;
-            background: #e8f0fe;
-            text-align: center;
-        ">
-            <div style="font-size:1.0em; font-weight:600; color:#1a73e8;">
-                🔀 Parallel Execution Phase
-            </div>
-            <div style="font-size:0.78em; color:#555; margin-top:2px; margin-bottom:6px;">
-                <code>bash scripts/run_parallel_testing.sh</code> — true OS-level parallelism
-            </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    unit_run = (parallel_execution or {}).get("unit_test_run")
-    ui_run = (parallel_execution or {}).get("ui_test_run")
-
-    if unit_run is not None or ui_run is not None:
-        col_unit, col_ui = st.columns(2)
-        with col_unit:
-            render_parallel_run_card("pytest", "🧪", unit_run or {})
-        with col_ui:
-            render_parallel_run_card("playwright", "🎭", ui_run or {})
-    else:
-        # Fallback for old state files without parallel_execution tracking
-        st.markdown(
-            "<div style='text-align:center; font-size:0.82em; color:#888; padding-bottom:6px;'>"
-            "pytest &nbsp;‖&nbsp; playwright — status not tracked in this workflow run</div>",
-            unsafe_allow_html=True,
-        )
-
-
 def render_pipeline(steps: list[dict[str, Any]], parallel_execution: dict[str, Any] | None) -> None:
-    """Render the full pipeline: Steps 1–4 sequential (write phases), parallel execution banner, Step 5."""
+    """Render the full 6-step pipeline.
+    Steps 1-4: sequential write phases.
+    Step 5: parallel test execution (with embedded sub-run cards).
+    Step 6: PR Creator.
+    """
     steps_by_id = {s["step_id"]: s for s in steps}
     arrow = "<div style='text-align:center; font-size:1.4em; color:#aaa;'>↓</div>"
 
-    # Steps 1 and 2 — sequential
-    for step_id in [1, 2]:
+    # Steps 1–4 — sequential
+    for step_id in [1, 2, 3, 4]:
         if step := steps_by_id.get(step_id):
             render_step_card(step)
             st.markdown(arrow, unsafe_allow_html=True)
 
-    # Step 3 — write-only (sequential)
-    if step := steps_by_id.get(3):
-        render_step_card(step)
+    # Step 5 — Parallel Test Execution
+    if step5 := steps_by_id.get(5):
+        render_step_card(step5)
+        # Embed the two parallel sub-run cards indented inside step 5
+        unit_run = (parallel_execution or {}).get("unit_test_run")
+        ui_run = (parallel_execution or {}).get("ui_test_run")
+        if unit_run is not None or ui_run is not None:
+            col_unit, col_ui = st.columns(2)
+            with col_unit:
+                render_parallel_run_card("pytest", "🧪", unit_run or {})
+            with col_ui:
+                render_parallel_run_card("playwright", "🎭", ui_run or {})
         st.markdown(arrow, unsafe_allow_html=True)
 
-    # Step 4 — write-only (sequential)
-    if step := steps_by_id.get(4):
-        render_step_card(step)
-        st.markdown(arrow, unsafe_allow_html=True)
-
-    # Parallel execution phase with live status cards
-    render_parallel_execution_banner(parallel_execution)
-    st.markdown(arrow, unsafe_allow_html=True)
-
-    # Step 5 — sequential
-    if step := steps_by_id.get(5):
+    # Step 6 — PR Creator
+    if step := steps_by_id.get(6):
         render_step_card(step)
 
 
@@ -325,7 +288,7 @@ def main() -> None:
     st.markdown("---")
     st.caption(
         f"Updated: {format_time(selected.get('updated_at'))}  |  "
-        "Pipeline: Step 1 → Step 2 → Step 3 (write) → Step 4 (write) → [pytest ‖ playwright] → Step 5"
+        "Pipeline: Step 1 → Step 2 → Step 3 (write) → Step 4 (write) → Step 5 [pytest ‖ playwright] → Step 6"
     )
 
 

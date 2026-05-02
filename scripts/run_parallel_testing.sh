@@ -25,8 +25,10 @@ STATE_SCRIPT="python3 scripts/update_orchestration_state.py"
 ts() { date '+%Y-%m-%d %H:%M:%S'; }
 
 # ---------------------------------------------------------------------------
-# Mark both parallel execution runs IN_PROGRESS simultaneously
+# Mark Step 5 (Parallel Test Execution) and both sub-runs IN_PROGRESS
 # ---------------------------------------------------------------------------
+echo "[$(ts)] Marking Step 5 (Parallel Test Execution) IN_PROGRESS..."
+${STATE_SCRIPT} --workflow-id "${WORKFLOW_ID}" --step 5 --status IN_PROGRESS
 echo "[$(ts)] Marking unit_test_run IN_PROGRESS..."
 ${STATE_SCRIPT} --workflow-id "${WORKFLOW_ID}" --parallel-step unit_test_run --status IN_PROGRESS
 echo "[$(ts)] Marking ui_test_run IN_PROGRESS..."
@@ -125,9 +127,9 @@ run_ui_tests() {
 }
 
 # ---------------------------------------------------------------------------
-# Launch both steps as TRUE parallel background processes
+# Launch both test suites as TRUE parallel background processes (Step 5)
 # ---------------------------------------------------------------------------
-echo "[$(ts)] Launching Step 3 (unit tests) and Step 4 (UI regression) in parallel..."
+echo "[$(ts)] Launching pytest and playwright in parallel (Step 5)..."
 
 run_unit_tests "${WORKFLOW_ID}" "${UNIT_LOG}" &
 UNIT_PID=$!
@@ -135,7 +137,7 @@ UNIT_PID=$!
 run_ui_tests "${WORKFLOW_ID}" "${UI_LOG}" &
 UI_PID=$!
 
-echo "[$(ts)] Step 3 PID=${UNIT_PID}  |  Step 4 PID=${UI_PID}"
+echo "[$(ts)] pytest PID=${UNIT_PID}  |  playwright PID=${UI_PID}"
 
 # ---------------------------------------------------------------------------
 # Wait for both background processes and capture exit codes
@@ -148,18 +150,21 @@ UI_EXIT=$?
 
 echo ""
 echo "===== PARALLEL PHASE SUMMARY ====="
-echo "Step 3 (Unit Testing)      exit=${UNIT_EXIT}"
-echo "Step 4 (UI Regression)     exit=${UI_EXIT}"
+echo "pytest (unit tests)        exit=${UNIT_EXIT}"
+echo "playwright (UI regression) exit=${UI_EXIT}"
 echo "=================================="
 
 # ---------------------------------------------------------------------------
-# Evaluate and exit
+# Mark Step 5 COMPLETED or BLOCKED based on combined result
 # ---------------------------------------------------------------------------
 if [ "${UNIT_EXIT}" -eq 0 ] && [ "${UI_EXIT}" -eq 0 ]; then
-  echo "[$(ts)] ✅ Both Step 3 and Step 4 COMPLETED. Proceeding to Step 5."
+  ${STATE_SCRIPT} --workflow-id "${WORKFLOW_ID}" --step 5 --status COMPLETED
+  echo "[$(ts)] ✅ Step 5 COMPLETED. Proceeding to Step 6 (PR Creator)."
   exit 0
 else
-  echo "[$(ts)] ❌ One or both steps BLOCKED. Check logs:"
+  BLOCK_MSG="Gate BLOCKED: one or more test suites failed. Check logs: ${UNIT_LOG}, ${UI_LOG}"
+  ${STATE_SCRIPT} --workflow-id "${WORKFLOW_ID}" --step 5 --status BLOCKED --error "${BLOCK_MSG}"
+  echo "[$(ts)] ❌ Step 5 BLOCKED. Check logs:"
   echo "  Unit log : ${UNIT_LOG}"
   echo "  UI log   : ${UI_LOG}"
   exit 1

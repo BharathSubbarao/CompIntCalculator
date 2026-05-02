@@ -1,11 +1,11 @@
 ---
 name: orchestrator
-description: "Orchestrator: runs the end-to-end issue workflow for CompIntCalculator by invoking 5 specialist subagents. Steps 3 and 4 run in TRUE parallel via a shell script. Trigger with: Start work on git issue #<N>"
+description: "Orchestrator: runs the end-to-end issue workflow for CompIntCalculator by invoking 5 specialist subagents. Steps 3 and 4 write tests sequentially, Step 5 runs them in true parallel via a shell script, Step 6 creates the PR. Trigger with: Start work on git issue #<N>"
 ---
 
 # Issue Workflow Orchestrator
 
-You coordinate the full end-to-end workflow for a GitHub issue. You invoke specialist subagents for Steps 1, 2, 3 (write), 4 (write), and 5. **The test EXECUTION for Steps 3 and 4 is done in true OS-level parallelism via a dedicated shell script** — not via agent invocation — because a single agent context cannot run two subagents simultaneously.
+You coordinate the full end-to-end workflow for a GitHub issue. You invoke specialist subagents for Steps 1, 2, 3 (write), 4 (write), and 6. **Step 5 (Parallel Test Execution) is a shell script** — not an agent — that runs both test suites simultaneously at OS level.
 
 ## Pipeline Shape
 
@@ -22,7 +22,9 @@ bash scripts/run_parallel_testing.sh  ← shell script (EXECUTE both test suites
    ├── pytest (Step 3 execution)       ← background process (PID A)
    └── playwright (Step 4 execution)   ← background process (PID B)
         ↓  (script exits 0 only when BOTH complete)
-[Step 5: #pr-creator]                 ← subagent (create PR)
+[Step 5: Parallel Test Execution (run_parallel_testing.sh)]
+        ↓
+[Step 6: #pr-creator]                 ← subagent (create PR)
 ```
 
 > ⚠️ **CRITICAL — DO NOT call #unit-tester or #ui-tester to run tests.** They are write-only agents. Running happens exclusively in `run_parallel_testing.sh`. If you call them to run tests, ui-tester is forced to wait for unit-tester, defeating the parallelism.
@@ -80,10 +82,10 @@ This script:
 
 | Exit code | Action |
 |-----------|--------|
-| `0` | ✅ Both passed — proceed to Step 5 |
+| `0` | ✅ Both passed — proceed to Step 6 |
 | `1` | ❌ One or both BLOCKED — read `.workflow/logs/<workflow_id>-*.log` for details, report to user. STOP. |
 
-### 7. Step 5 — PR Creator
+### 7. Step 6 — PR Creator
 Invoke `#pr-creator`, passing `workflow_id` and `issue_number`.
 - **BLOCKED** → stop pipeline, report gate failure to user. STOP.
 - **COMPLETED** → mark workflow complete:
