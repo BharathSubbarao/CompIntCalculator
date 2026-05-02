@@ -103,4 +103,4 @@ On any BLOCK (any step):
 ## Dashboard
 
 Workflow state is written to `.workflow/state/<workflow_id>.json` after every transition.
-The Streamlit dashboard (`workflow_dashboard.py`) reads this file, renders the parallel pipeline view, and auto-refreshes every 5 seconds.
+The Streamlit dashboard (`scripts/workflow_dashboard.py`) reads this file, renders the parallel pipeline view, and auto-refreshes every 5 seconds.

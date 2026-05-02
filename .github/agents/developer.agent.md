@@ -36,7 +36,7 @@ Make the code change in `app.py` (or the relevant product file) **now**, before 
 **Scope fence — mandatory:**
 - Implement EXACTLY and ONLY what `## Specific Change Required` states.
 - Do NOT add extra improvements, refactors, or features inferred from conventions.
-- Do NOT modify `scripts/`, `workflow_dashboard.py`, `playwright.config.ts`, or `.github/`.
+- Do NOT modify `scripts/workflow_dashboard.py`, `playwright.config.ts`, or `.github/`.
 
 ### 5. Gate 1 — Functional Coverage check
 ```bash
@@ -51,7 +51,7 @@ python3 scripts/update_workflow_state.py \
 ```
 ✅ Confirm `[OK]`, return **BLOCKED** to orchestrator. STOP.
 
-If only infrastructure files changed (`scripts/`, `workflow_dashboard.py`, `playwright.config.ts`):
+If only infrastructure files changed (`scripts/`, `playwright.config.ts`):
 ```bash
 python3 scripts/update_workflow_state.py \
   --workflow-id <workflow_id> --step 2 --status BLOCKED \

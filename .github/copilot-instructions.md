@@ -59,7 +59,7 @@ These rules are **blocking requirements** for every automated issue workflow. A 
 - Identify which file(s) in the app must change (e.g., `app.py` for UI features).
 - Make the code change **before** running tests or creating a commit.
 - **BLOCK** if: the issue is a product feature but no `app.py` change has been made.
-- **BLOCK** if: the only changed files are workflow/infra files (`ai_workflow/`, `scripts/`, `workflow_dashboard.py`, `playwright.config.ts`).
+- **BLOCK** if: the only changed files are workflow/infra files (`ai_workflow/`, `scripts/`, `playwright.config.ts`).
 
 ### Gate 2 — Unit Test Delta (Unit Tester Step)
 - For every new feature or changed behavior, add or update tests in `tests/test_app.py`.

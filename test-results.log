@@ -316,3 +316,548 @@ tests/test_app.py::test_build_growth_chart_uses_formatted_hover_text PASSED [100
 [2026-05-01 18:35:06] !!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
 [2026-05-01 18:35:06] ============================== 2 errors in 0.88s ===============================
 [2026-05-01 18:35:06] ===== TEST RUN END   2026-05-01 18:35:05 IST (exit=2) =====
+[2026-05-02 12:05:47] ===== TEST RUN START 2026-05-02 12:05:46 IST =====
+[2026-05-02 12:05:48] ============================= test session starts ==============================
+[2026-05-02 12:05:48] platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Library/Developer/CommandLineTools/usr/bin/python3
+[2026-05-02 12:05:48] cachedir: .pytest_cache
+[2026-05-02 12:05:48] rootdir: /Users/bsubbarao/MYDATA/CompIntCalculator
+[2026-05-02 12:05:48] plugins: anyio-4.12.1
+[2026-05-02 12:05:48] collecting ... collected 140 items / 2 errors
+[2026-05-02 12:05:48] 
+[2026-05-02 12:05:48] ==================================== ERRORS ====================================
+[2026-05-02 12:05:48] _______________ ERROR collecting tests/test_workflow_personas.py _______________
+[2026-05-02 12:05:48] ImportError while importing test module '/Users/bsubbarao/MYDATA/CompIntCalculator/tests/test_workflow_personas.py'.
+[2026-05-02 12:05:48] Hint: make sure your test modules/packages have valid Python names.
+[2026-05-02 12:05:48] Traceback:
+[2026-05-02 12:05:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/python.py:498: in importtestmodule
+[2026-05-02 12:05:48]     mod = import_path(
+[2026-05-02 12:05:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/pathlib.py:587: in import_path
+[2026-05-02 12:05:48]     importlib.import_module(module_name)
+[2026-05-02 12:05:48] /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+[2026-05-02 12:05:48]     return _bootstrap._gcd_import(name[level:], package, level)
+[2026-05-02 12:05:48] <frozen importlib._bootstrap>:1030: in _gcd_import
+[2026-05-02 12:05:48]     ???
+[2026-05-02 12:05:48] <frozen importlib._bootstrap>:1007: in _find_and_load
+[2026-05-02 12:05:48]     ???
+[2026-05-02 12:05:48] <frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+[2026-05-02 12:05:48]     ???
+[2026-05-02 12:05:48] <frozen importlib._bootstrap>:680: in _load_unlocked
+[2026-05-02 12:05:48]     ???
+[2026-05-02 12:05:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2026-05-02 12:05:48]     exec(co, module.__dict__)
+[2026-05-02 12:05:48] tests/test_workflow_personas.py:7: in <module>
+[2026-05-02 12:05:48]     from ai_workflow import personas
+[2026-05-02 12:05:48] E   ModuleNotFoundError: No module named 'ai_workflow'
+[2026-05-02 12:05:48] ___________ ERROR collecting tests/test_workflow_start_validation.py ___________
+[2026-05-02 12:05:48] ImportError while importing test module '/Users/bsubbarao/MYDATA/CompIntCalculator/tests/test_workflow_start_validation.py'.
+[2026-05-02 12:05:48] Hint: make sure your test modules/packages have valid Python names.
+[2026-05-02 12:05:48] Traceback:
+[2026-05-02 12:05:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/python.py:498: in importtestmodule
+[2026-05-02 12:05:48]     mod = import_path(
+[2026-05-02 12:05:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/pathlib.py:587: in import_path
+[2026-05-02 12:05:48]     importlib.import_module(module_name)
+[2026-05-02 12:05:48] /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+[2026-05-02 12:05:48]     return _bootstrap._gcd_import(name[level:], package, level)
+[2026-05-02 12:05:48] <frozen importlib._bootstrap>:1030: in _gcd_import
+[2026-05-02 12:05:48]     ???
+[2026-05-02 12:05:48] <frozen importlib._bootstrap>:1007: in _find_and_load
+[2026-05-02 12:05:48]     ???
+[2026-05-02 12:05:48] <frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+[2026-05-02 12:05:48]     ???
+[2026-05-02 12:05:48] <frozen importlib._bootstrap>:680: in _load_unlocked
+[2026-05-02 12:05:48]     ???
+[2026-05-02 12:05:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2026-05-02 12:05:48]     exec(co, module.__dict__)
+[2026-05-02 12:05:48] tests/test_workflow_start_validation.py:13: in <module>
+[2026-05-02 12:05:48]     from ai_workflow.github_api import IssueNotFoundError
+[2026-05-02 12:05:48] E   ModuleNotFoundError: No module named 'ai_workflow'
+[2026-05-02 12:05:48] =========================== short test summary info ============================
+[2026-05-02 12:05:48] ERROR tests/test_workflow_personas.py
+[2026-05-02 12:05:48] ERROR tests/test_workflow_start_validation.py
+[2026-05-02 12:05:48] !!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+[2026-05-02 12:05:48] ============================== 2 errors in 0.95s ===============================
+[2026-05-02 12:05:48] ===== TEST RUN END   2026-05-02 12:05:47 IST (exit=2) =====
+[2026-05-02 12:06:34] ===== TEST RUN START 2026-05-02 12:06:31 IST =====
+[2026-05-02 12:06:34] ============================= test session starts ==============================
+[2026-05-02 12:06:34] platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0
+[2026-05-02 12:06:34] rootdir: /Users/bsubbarao/MYDATA/CompIntCalculator
+[2026-05-02 12:06:34] plugins: anyio-4.12.1
+[2026-05-02 12:06:34] collected 151 items
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py ...................................................... [ 35%]
+[2026-05-02 12:06:34] ...................................................FFFFFFFFFFFFFFFFFFFFF [ 83%]
+[2026-05-02 12:06:34] FFFF..F..................                                                [100%]
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] =================================== FAILURES ===================================
+[2026-05-02 12:06:34] _______ TestAxisBankColorConstants.test_axis_red_is_primary_brand_color ________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestAxisBankColorConstants object at 0x10f3cf910>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_axis_red_is_primary_brand_color(self) -> None:
+[2026-05-02 12:06:34]         """AXIS_RED must be the Axis Bank primary deep-red/maroon #97144D."""
+[2026-05-02 12:06:34] >       assert app.AXIS_RED == "#97144D"
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'AXIS_RED'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:713: AttributeError
+[2026-05-02 12:06:34] ____________ TestAxisBankColorConstants.test_axis_red_dark_variant _____________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestAxisBankColorConstants object at 0x10f3cfa90>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_axis_red_dark_variant(self) -> None:
+[2026-05-02 12:06:34]         """AXIS_RED_DARK is the darker hover/footer variant #6B0F38."""
+[2026-05-02 12:06:34] >       assert app.AXIS_RED_DARK == "#6B0F38"
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'AXIS_RED_DARK'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:717: AttributeError
+[2026-05-02 12:06:34] ____________ TestAxisBankColorConstants.test_axis_red_light_variant ____________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestAxisBankColorConstants object at 0x10f3cfc40>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_axis_red_light_variant(self) -> None:
+[2026-05-02 12:06:34]         """AXIS_RED_LIGHT is the lighter highlight tint #C41E5B."""
+[2026-05-02 12:06:34] >       assert app.AXIS_RED_LIGHT == "#C41E5B"
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'AXIS_RED_LIGHT'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:721: AttributeError
+[2026-05-02 12:06:34] _________ TestAxisBankColorConstants.test_axis_accent_page_background __________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestAxisBankColorConstants object at 0x10f3cfdc0>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_axis_accent_page_background(self) -> None:
+[2026-05-02 12:06:34]         """AXIS_ACCENT is the light blue-grey page background #E8F0F9."""
+[2026-05-02 12:06:34] >       assert app.AXIS_ACCENT == "#E8F0F9"
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'AXIS_ACCENT'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:725: AttributeError
+[2026-05-02 12:06:34] __________________ TestAxisBankColorConstants.test_axis_white __________________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestAxisBankColorConstants object at 0x10f3cff40>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_axis_white(self) -> None:
+[2026-05-02 12:06:34]         """AXIS_WHITE must be pure white #FFFFFF."""
+[2026-05-02 12:06:34] >       assert app.AXIS_WHITE == "#FFFFFF"
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'AXIS_WHITE'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:729: AttributeError
+[2026-05-02 12:06:34] _______________ TestAxisBankColorConstants.test_axis_text_light ________________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestAxisBankColorConstants object at 0x10f3d8100>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_axis_text_light(self) -> None:
+[2026-05-02 12:06:34]         """AXIS_TEXT_LIGHT must be near-white #F5F5F5 for light-on-dark text."""
+[2026-05-02 12:06:34] >       assert app.AXIS_TEXT_LIGHT == "#F5F5F5"
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'AXIS_TEXT_LIGHT'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:733: AttributeError
+[2026-05-02 12:06:34] ________________ TestAxisBankColorConstants.test_axis_text_dark ________________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestAxisBankColorConstants object at 0x10f3d8280>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_axis_text_dark(self) -> None:
+[2026-05-02 12:06:34]         """AXIS_TEXT_DARK must be near-black #1A1A1A for dark text on light backgrounds."""
+[2026-05-02 12:06:34] >       assert app.AXIS_TEXT_DARK == "#1A1A1A"
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'AXIS_TEXT_DARK'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:737: AttributeError
+[2026-05-02 12:06:34] ______ TestInjectAxisBankStyles.test_inject_axis_bank_styles_is_callable _______
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3d8490>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_inject_axis_bank_styles_is_callable(self) -> None:
+[2026-05-02 12:06:34]         """inject_axis_bank_styles must exist in app module and be callable."""
+[2026-05-02 12:06:34] >       assert callable(app.inject_axis_bank_styles)
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:745: AttributeError
+[2026-05-02 12:06:34] _ TestInjectAxisBankStyles.test_inject_axis_bank_styles_calls_st_markdown_once _
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3d8610>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116a0cca0>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_inject_axis_bank_styles_calls_st_markdown_once(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """inject_axis_bank_styles must call st.markdown exactly once."""
+[2026-05-02 12:06:34]         calls: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: calls.append((text, kwargs)))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:751: AttributeError
+[2026-05-02 12:06:34] _ TestInjectAxisBankStyles.test_inject_axis_bank_styles_passes_unsafe_allow_html _
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3d8790>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10bf33d00>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_inject_axis_bank_styles_passes_unsafe_allow_html(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """inject_axis_bank_styles must pass unsafe_allow_html=True to st.markdown."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(kwargs))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:758: AttributeError
+[2026-05-02 12:06:34] __ TestInjectAxisBankStyles.test_injected_css_contains_axis_red_primary_color __
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3cfd30>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10f42efd0>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_injected_css_contains_axis_red_primary_color(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """Injected CSS must contain the Axis Bank primary color #97144D."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:765: AttributeError
+[2026-05-02 12:06:34] _______ TestInjectAxisBankStyles.test_injected_css_wrapped_in_style_tags _______
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3cf8b0>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116b09610>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_injected_css_wrapped_in_style_tags(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """Injected content must be wrapped in <style>…</style> tags."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:772: AttributeError
+[2026-05-02 12:06:34] __________ TestInjectAxisBankStyles.test_injected_css_styles_sidebar ___________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3cf2b0>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10cc10430>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_injected_css_styles_sidebar(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """Injected CSS must target the sidebar via stSidebar data-testid."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:779: AttributeError
+[2026-05-02 12:06:34] ________ TestInjectAxisBankStyles.test_injected_css_styles_metric_cards ________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3c6fa0>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x106680e80>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_injected_css_styles_metric_cards(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """Injected CSS must target stMetric cards."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:786: AttributeError
+[2026-05-02 12:06:34] __________ TestInjectAxisBankStyles.test_injected_css_styles_buttons ___________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3d8370>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116ba3640>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_injected_css_styles_buttons(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """Injected CSS must target primary Streamlit buttons (.stButton)."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:793: AttributeError
+[2026-05-02 12:06:34] _______ TestInjectAxisBankStyles.test_injected_css_styles_table_headers ________
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3d84c0>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116a7bd00>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_injected_css_styles_table_headers(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """Injected CSS must style dataframe/table headers (thead th)."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:800: AttributeError
+[2026-05-02 12:06:34] ____ TestInjectAxisBankStyles.test_injected_css_contains_dark_footer_color _____
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3d81f0>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116a0c5b0>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_injected_css_contains_dark_footer_color(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """Injected CSS must include AXIS_RED_DARK (#6B0F38) for footer/hover styling."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:34] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] tests/test_app.py:807: AttributeError
+[2026-05-02 12:06:34] ______ TestInjectAxisBankStyles.test_injected_css_styles_stapp_background ______
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34] self = <test_app.TestInjectAxisBankStyles object at 0x10f3d8a00>
+[2026-05-02 12:06:34] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116b44130>
+[2026-05-02 12:06:34] 
+[2026-05-02 12:06:34]     def test_injected_css_styles_stapp_background(self, monkeypatch) -> None:
+[2026-05-02 12:06:34]         """Injected CSS must set the page background via .stApp selector."""
+[2026-05-02 12:06:34]         captured: list = []
+[2026-05-02 12:06:34]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:34] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:35] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:814: AttributeError
+[2026-05-02 12:06:35] ___________ TestInjectAxisBankStyles.test_injected_css_styles_header ___________
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] self = <test_app.TestInjectAxisBankStyles object at 0x10f3d8b80>
+[2026-05-02 12:06:35] monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x116abc1f0>
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35]     def test_injected_css_styles_header(self, monkeypatch) -> None:
+[2026-05-02 12:06:35]         """Injected CSS must style the top header bar (stHeader data-testid)."""
+[2026-05-02 12:06:35]         captured: list = []
+[2026-05-02 12:06:35]         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+[2026-05-02 12:06:35] >       app.inject_axis_bank_styles()
+[2026-05-02 12:06:35] E       AttributeError: module 'app' has no attribute 'inject_axis_bank_styles'
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:821: AttributeError
+[2026-05-02 12:06:35] ____ TestAxisBankChartColors.test_single_rate_chart_line_color_is_axis_red _____
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] self = <test_app.TestAxisBankChartColors object at 0x10f3d8d90>
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35]     def test_single_rate_chart_line_color_is_axis_red(self) -> None:
+[2026-05-02 12:06:35]         """build_growth_chart single-rate line must use AXIS_RED (#97144D)."""
+[2026-05-02 12:06:35]         fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
+[2026-05-02 12:06:35] >       assert fig.data[0].line.color == app.AXIS_RED
+[2026-05-02 12:06:35] E       AttributeError: module 'app' has no attribute 'AXIS_RED'
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:838: AttributeError
+[2026-05-02 12:06:35] _______ TestAxisBankChartColors.test_single_rate_chart_line_color_value ________
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] self = <test_app.TestAxisBankChartColors object at 0x10f3d8f10>
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35]     def test_single_rate_chart_line_color_value(self) -> None:
+[2026-05-02 12:06:35]         """build_growth_chart single-rate line color must be exactly #97144D."""
+[2026-05-02 12:06:35]         fig = app.build_growth_chart(self._make_rows(), "$", "USD")
+[2026-05-02 12:06:35] >       assert fig.data[0].line.color == "#97144D"
+[2026-05-02 12:06:35] E       AssertionError: assert '#39D353' == '#97144D'
+[2026-05-02 12:06:35] E         
+[2026-05-02 12:06:35] E         - #97144D
+[2026-05-02 12:06:35] E         + #39D353
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:843: AssertionError
+[2026-05-02 12:06:35] _ TestAxisBankChartColors.test_single_rate_chart_fill_color_uses_axis_red_rgba _
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] self = <test_app.TestAxisBankChartColors object at 0x10f3e30d0>
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35]     def test_single_rate_chart_fill_color_uses_axis_red_rgba(self) -> None:
+[2026-05-02 12:06:35]         """build_growth_chart area fill must use AXIS_RED RGBA (151, 20, 77)."""
+[2026-05-02 12:06:35]         fig = app.build_growth_chart(self._make_rows(), "₹", "INR")
+[2026-05-02 12:06:35]         # rgba(151, 20, 77, 0.14) corresponds to #97144D with 14% opacity
+[2026-05-02 12:06:35] >       assert "151, 20, 77" in fig.data[0].fillcolor
+[2026-05-02 12:06:35] E       AssertionError: assert '151, 20, 77' in 'rgba(57, 211, 83, 0.10)'
+[2026-05-02 12:06:35] E        +  where 'rgba(57, 211, 83, 0.10)' = Scatter({\n    'fill': 'tozeroy',\n    'fillcolor': 'rgba(57, 211, 83, 0.10)',\n    'hovertemplate': 'Year %{x:.2f}<br>Ba...',\n    'text': [₹10,000.00, ₹13,000.00, ₹17,000.00],\n    'x': [0.0, 5.0, 10.0],\n    'y': [10000.0, 13000.0, 17000.0]\n}).fillcolor
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:849: AssertionError
+[2026-05-02 12:06:35] __ TestAxisBankChartColors.test_variance_line_styles_base_rate_uses_axis_red ___
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] self = <test_app.TestAxisBankChartColors object at 0x10f3e3250>
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35]     def test_variance_line_styles_base_rate_uses_axis_red(self) -> None:
+[2026-05-02 12:06:35]         """_VARIANCE_LINE_STYLES base-rate entry (index 1) must use AXIS_RED #97144D."""
+[2026-05-02 12:06:35] >       assert app._VARIANCE_LINE_STYLES[1]["color"] == "#97144D"
+[2026-05-02 12:06:35] E       AssertionError: assert '#39D353' == '#97144D'
+[2026-05-02 12:06:35] E         
+[2026-05-02 12:06:35] E         - #97144D
+[2026-05-02 12:06:35] E         + #39D353
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:853: AssertionError
+[2026-05-02 12:06:35] _ TestAxisBankChartColors.test_variance_line_styles_lower_rate_uses_axis_gold __
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] self = <test_app.TestAxisBankChartColors object at 0x10f3e33d0>
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35]     def test_variance_line_styles_lower_rate_uses_axis_gold(self) -> None:
+[2026-05-02 12:06:35]         """_VARIANCE_LINE_STYLES lower-rate entry (index 0) must use Axis gold #F7B500 for bold contrast."""
+[2026-05-02 12:06:35] >       assert app._VARIANCE_LINE_STYLES[0]["color"] == "#F7B500"
+[2026-05-02 12:06:35] E       AssertionError: assert '#F59E0B' == '#F7B500'
+[2026-05-02 12:06:35] E         
+[2026-05-02 12:06:35] E         - #F7B500
+[2026-05-02 12:06:35] E         + #F59E0B
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:857: AssertionError
+[2026-05-02 12:06:35] _ TestAxisBankChartColors.test_variance_line_styles_upper_rate_uses_axis_bright_red _
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] self = <test_app.TestAxisBankChartColors object at 0x10f3e3550>
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35]     def test_variance_line_styles_upper_rate_uses_axis_bright_red(self) -> None:
+[2026-05-02 12:06:35]         """_VARIANCE_LINE_STYLES upper-rate entry (index 2) must use Axis bright red #E31837."""
+[2026-05-02 12:06:35] >       assert app._VARIANCE_LINE_STYLES[2]["color"] == "#E31837"
+[2026-05-02 12:06:35] E       AssertionError: assert '#60A5FA' == '#E31837'
+[2026-05-02 12:06:35] E         
+[2026-05-02 12:06:35] E         - #E31837
+[2026-05-02 12:06:35] E         + #60A5FA
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:861: AssertionError
+[2026-05-02 12:06:35] _ TestAxisBankChartColors.test_variance_line_styles_fill_colors_reference_axis_palette _
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] self = <test_app.TestAxisBankChartColors object at 0x10f3e39d0>
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35]     def test_variance_line_styles_fill_colors_reference_axis_palette(self) -> None:
+[2026-05-02 12:06:35]         """Fill RGBA values in _VARIANCE_LINE_STYLES must reference Axis Bank brand RGB components."""
+[2026-05-02 12:06:35]         # Index 0: Axis gold rgb(247, 181, 0), Index 1: AXIS_RED rgb(151, 20, 77), Index 2: bright red rgb(227, 24, 55)
+[2026-05-02 12:06:35]         expected_fills = [
+[2026-05-02 12:06:35]             ("247", "181", "0"),    # Axis gold
+[2026-05-02 12:06:35]             ("151", "20", "77"),    # AXIS_RED
+[2026-05-02 12:06:35]             ("227", "24", "55"),    # Axis bright red
+[2026-05-02 12:06:35]         ]
+[2026-05-02 12:06:35]         for i, (r, g, b) in enumerate(expected_fills):
+[2026-05-02 12:06:35]             fill = app._VARIANCE_LINE_STYLES[i]["fill"]
+[2026-05-02 12:06:35] >           assert r in fill and g in fill and b in fill, (
+[2026-05-02 12:06:35]                 f"Entry {i} fill '{fill}' does not match expected RGB({r},{g},{b})"
+[2026-05-02 12:06:35]             )
+[2026-05-02 12:06:35] E           AssertionError: Entry 0 fill 'rgba(245, 158, 11, 0.10)' does not match expected RGB(247,181,0)
+[2026-05-02 12:06:35] E           assert ('247' in 'rgba(245, 158, 11, 0.10)')
+[2026-05-02 12:06:35] 
+[2026-05-02 12:06:35] tests/test_app.py:883: AssertionError
+[2026-05-02 12:06:35] =========================== short test summary info ============================
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankColorConstants::test_axis_red_is_primary_brand_color
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankColorConstants::test_axis_red_dark_variant
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankColorConstants::test_axis_red_light_variant
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankColorConstants::test_axis_accent_page_background
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankColorConstants::test_axis_white - Attri...
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankColorConstants::test_axis_text_light - ...
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankColorConstants::test_axis_text_dark - A...
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_inject_axis_bank_styles_is_callable
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_inject_axis_bank_styles_calls_st_markdown_once
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_inject_axis_bank_styles_passes_unsafe_allow_html
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_contains_axis_red_primary_color
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_wrapped_in_style_tags
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_styles_sidebar
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_styles_metric_cards
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_styles_buttons
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_styles_table_headers
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_contains_dark_footer_color
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_styles_stapp_background
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestInjectAxisBankStyles::test_injected_css_styles_header
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankChartColors::test_single_rate_chart_line_color_is_axis_red
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankChartColors::test_single_rate_chart_line_color_value
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankChartColors::test_single_rate_chart_fill_color_uses_axis_red_rgba
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankChartColors::test_variance_line_styles_base_rate_uses_axis_red
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankChartColors::test_variance_line_styles_lower_rate_uses_axis_gold
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankChartColors::test_variance_line_styles_upper_rate_uses_axis_bright_red
+[2026-05-02 12:06:35] FAILED tests/test_app.py::TestAxisBankChartColors::test_variance_line_styles_fill_colors_reference_axis_palette
+[2026-05-02 12:06:35] ======================== 26 failed, 125 passed in 2.77s ========================
+[2026-05-02 12:06:35] ===== TEST RUN END   2026-05-02 12:06:34 IST (exit=1) =====
+[2026-05-02 13:52:48] ===== TEST RUN START 2026-05-02 13:52:41 IST =====
+[2026-05-02 13:52:48] ============================= test session starts ==============================
+[2026-05-02 13:52:48] platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Library/Developer/CommandLineTools/usr/bin/python3
+[2026-05-02 13:52:48] cachedir: .pytest_cache
+[2026-05-02 13:52:48] rootdir: /Users/bsubbarao/MYDATA/CompIntCalculator
+[2026-05-02 13:52:48] plugins: anyio-4.12.1
+[2026-05-02 13:52:48] collecting ... collected 132 items / 2 errors
+[2026-05-02 13:52:48] 
+[2026-05-02 13:52:48] ==================================== ERRORS ====================================
+[2026-05-02 13:52:48] _______________ ERROR collecting tests/test_workflow_personas.py _______________
+[2026-05-02 13:52:48] ImportError while importing test module '/Users/bsubbarao/MYDATA/CompIntCalculator/tests/test_workflow_personas.py'.
+[2026-05-02 13:52:48] Hint: make sure your test modules/packages have valid Python names.
+[2026-05-02 13:52:48] Traceback:
+[2026-05-02 13:52:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/python.py:498: in importtestmodule
+[2026-05-02 13:52:48]     mod = import_path(
+[2026-05-02 13:52:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/pathlib.py:587: in import_path
+[2026-05-02 13:52:48]     importlib.import_module(module_name)
+[2026-05-02 13:52:48] /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+[2026-05-02 13:52:48]     return _bootstrap._gcd_import(name[level:], package, level)
+[2026-05-02 13:52:48] <frozen importlib._bootstrap>:1030: in _gcd_import
+[2026-05-02 13:52:48]     ???
+[2026-05-02 13:52:48] <frozen importlib._bootstrap>:1007: in _find_and_load
+[2026-05-02 13:52:48]     ???
+[2026-05-02 13:52:48] <frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+[2026-05-02 13:52:48]     ???
+[2026-05-02 13:52:48] <frozen importlib._bootstrap>:680: in _load_unlocked
+[2026-05-02 13:52:48]     ???
+[2026-05-02 13:52:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2026-05-02 13:52:48]     exec(co, module.__dict__)
+[2026-05-02 13:52:48] tests/test_workflow_personas.py:7: in <module>
+[2026-05-02 13:52:48]     from ai_workflow import personas
+[2026-05-02 13:52:48] E   ModuleNotFoundError: No module named 'ai_workflow'
+[2026-05-02 13:52:48] ___________ ERROR collecting tests/test_workflow_start_validation.py ___________
+[2026-05-02 13:52:48] ImportError while importing test module '/Users/bsubbarao/MYDATA/CompIntCalculator/tests/test_workflow_start_validation.py'.
+[2026-05-02 13:52:48] Hint: make sure your test modules/packages have valid Python names.
+[2026-05-02 13:52:48] Traceback:
+[2026-05-02 13:52:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/python.py:498: in importtestmodule
+[2026-05-02 13:52:48]     mod = import_path(
+[2026-05-02 13:52:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/pathlib.py:587: in import_path
+[2026-05-02 13:52:48]     importlib.import_module(module_name)
+[2026-05-02 13:52:48] /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+[2026-05-02 13:52:48]     return _bootstrap._gcd_import(name[level:], package, level)
+[2026-05-02 13:52:48] <frozen importlib._bootstrap>:1030: in _gcd_import
+[2026-05-02 13:52:48]     ???
+[2026-05-02 13:52:48] <frozen importlib._bootstrap>:1007: in _find_and_load
+[2026-05-02 13:52:48]     ???
+[2026-05-02 13:52:48] <frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+[2026-05-02 13:52:48]     ???
+[2026-05-02 13:52:48] <frozen importlib._bootstrap>:680: in _load_unlocked
+[2026-05-02 13:52:48]     ???
+[2026-05-02 13:52:48] ../../Library/Python/3.9/lib/python/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2026-05-02 13:52:48]     exec(co, module.__dict__)
+[2026-05-02 13:52:48] tests/test_workflow_start_validation.py:13: in <module>
+[2026-05-02 13:52:48]     from ai_workflow.github_api import IssueNotFoundError
+[2026-05-02 13:52:48] E   ModuleNotFoundError: No module named 'ai_workflow'
+[2026-05-02 13:52:48] =========================== short test summary info ============================
+[2026-05-02 13:52:48] ERROR tests/test_workflow_personas.py
+[2026-05-02 13:52:48] ERROR tests/test_workflow_start_validation.py
+[2026-05-02 13:52:48] !!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+[2026-05-02 13:52:48] ============================== 2 errors in 5.36s ===============================
+[2026-05-02 13:52:48] ===== TEST RUN END   2026-05-02 13:52:48 IST (exit=2) =====
+[2026-05-02 13:53:39] ===== TEST RUN START 2026-05-02 13:53:38 IST =====
+[2026-05-02 13:53:39] ============================= test session starts ==============================
+[2026-05-02 13:53:39] platform darwin -- Python 3.9.6, pytest-8.4.2, pluggy-1.6.0 -- /Library/Developer/CommandLineTools/usr/bin/python3
+[2026-05-02 13:53:39] cachedir: .pytest_cache
+[2026-05-02 13:53:39] rootdir: /Users/bsubbarao/MYDATA/CompIntCalculator
+[2026-05-02 13:53:39] plugins: anyio-4.12.1
+[2026-05-02 13:53:39] collecting ... collected 132 items / 2 errors
+[2026-05-02 13:53:39] 
+[2026-05-02 13:53:39] ==================================== ERRORS ====================================
+[2026-05-02 13:53:39] _______________ ERROR collecting tests/test_workflow_personas.py _______________
+[2026-05-02 13:53:39] ImportError while importing test module '/Users/bsubbarao/MYDATA/CompIntCalculator/tests/test_workflow_personas.py'.
+[2026-05-02 13:53:39] Hint: make sure your test modules/packages have valid Python names.
+[2026-05-02 13:53:39] Traceback:
+[2026-05-02 13:53:39] ../../Library/Python/3.9/lib/python/site-packages/_pytest/python.py:498: in importtestmodule
+[2026-05-02 13:53:39]     mod = import_path(
+[2026-05-02 13:53:39] ../../Library/Python/3.9/lib/python/site-packages/_pytest/pathlib.py:587: in import_path
+[2026-05-02 13:53:39]     importlib.import_module(module_name)
+[2026-05-02 13:53:39] /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+[2026-05-02 13:53:39]     return _bootstrap._gcd_import(name[level:], package, level)
+[2026-05-02 13:53:39] <frozen importlib._bootstrap>:1030: in _gcd_import
+[2026-05-02 13:53:39]     ???
+[2026-05-02 13:53:39] <frozen importlib._bootstrap>:1007: in _find_and_load
+[2026-05-02 13:53:39]     ???
+[2026-05-02 13:53:39] <frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+[2026-05-02 13:53:39]     ???
+[2026-05-02 13:53:39] <frozen importlib._bootstrap>:680: in _load_unlocked
+[2026-05-02 13:53:39]     ???
+[2026-05-02 13:53:39] ../../Library/Python/3.9/lib/python/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2026-05-02 13:53:39]     exec(co, module.__dict__)
+[2026-05-02 13:53:39] tests/test_workflow_personas.py:7: in <module>
+[2026-05-02 13:53:39]     from ai_workflow import personas
+[2026-05-02 13:53:39] E   ModuleNotFoundError: No module named 'ai_workflow'
+[2026-05-02 13:53:39] ___________ ERROR collecting tests/test_workflow_start_validation.py ___________
+[2026-05-02 13:53:39] ImportError while importing test module '/Users/bsubbarao/MYDATA/CompIntCalculator/tests/test_workflow_start_validation.py'.
+[2026-05-02 13:53:39] Hint: make sure your test modules/packages have valid Python names.
+[2026-05-02 13:53:39] Traceback:
+[2026-05-02 13:53:39] ../../Library/Python/3.9/lib/python/site-packages/_pytest/python.py:498: in importtestmodule
+[2026-05-02 13:53:39]     mod = import_path(
+[2026-05-02 13:53:39] ../../Library/Python/3.9/lib/python/site-packages/_pytest/pathlib.py:587: in import_path
+[2026-05-02 13:53:39]     importlib.import_module(module_name)
+[2026-05-02 13:53:39] /Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/importlib/__init__.py:127: in import_module
+[2026-05-02 13:53:39]     return _bootstrap._gcd_import(name[level:], package, level)
+[2026-05-02 13:53:39] <frozen importlib._bootstrap>:1030: in _gcd_import
+[2026-05-02 13:53:39]     ???
+[2026-05-02 13:53:39] <frozen importlib._bootstrap>:1007: in _find_and_load
+[2026-05-02 13:53:39]     ???
+[2026-05-02 13:53:39] <frozen importlib._bootstrap>:986: in _find_and_load_unlocked
+[2026-05-02 13:53:39]     ???
+[2026-05-02 13:53:39] <frozen importlib._bootstrap>:680: in _load_unlocked
+[2026-05-02 13:53:39]     ???
+[2026-05-02 13:53:39] ../../Library/Python/3.9/lib/python/site-packages/_pytest/assertion/rewrite.py:186: in exec_module
+[2026-05-02 13:53:39]     exec(co, module.__dict__)
+[2026-05-02 13:53:39] tests/test_workflow_start_validation.py:13: in <module>
+[2026-05-02 13:53:39]     from ai_workflow.github_api import IssueNotFoundError
+[2026-05-02 13:53:39] E   ModuleNotFoundError: No module named 'ai_workflow'
+[2026-05-02 13:53:39] =========================== short test summary info ============================
+[2026-05-02 13:53:39] ERROR tests/test_workflow_personas.py
+[2026-05-02 13:53:39] ERROR tests/test_workflow_start_validation.py
+[2026-05-02 13:53:39] !!!!!!!!!!!!!!!!!!! Interrupted: 2 errors during collection !!!!!!!!!!!!!!!!!!!!
+[2026-05-02 13:53:39] ============================== 2 errors in 0.82s ===============================
+[2026-05-02 13:53:39] ===== TEST RUN END   2026-05-02 13:53:39 IST (exit=2) =====
