@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import floor, isclose
 
 import numpy  # noqa: F401
-import pandas  # noqa: F401
+import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 
@@ -222,6 +222,64 @@ def format_money_value(
         )
 
     return f"{money_sign}{money_currency_symbol}{money_absolute:,.2f}"
+
+
+def style_summary_dataframe(rows: list[dict], balance_columns: list[str] | None = None) -> pd.io.formats.style.Styler:
+    """Apply dark-green fintech styling to the year-by-year summary grid.
+
+    Applies:
+    - Dark card background with alternating row shading
+    - Neon green color scale on balance column(s) (low → muted, high → bright green)
+    - Consistent white text throughout
+    """
+    df = pd.DataFrame(rows)
+
+    row_even = f"background-color: {THEME_CARD}; color: {THEME_TEXT_PRIMARY};"
+    row_odd = f"background-color: {THEME_BG}; color: {THEME_TEXT_PRIMARY};"
+
+    def alternate_rows(row: pd.Series) -> list[str]:
+        style = row_even if row.name % 2 == 0 else row_odd
+        return [style] * len(row)
+
+    styler = (
+        df.style
+        .apply(alternate_rows, axis=1)
+        .set_table_styles([
+            {
+                "selector": "thead th",
+                "props": [
+                    ("background-color", THEME_CARD),
+                    ("color", THEME_GREEN),
+                    ("font-weight", "700"),
+                    ("text-transform", "uppercase"),
+                    ("letter-spacing", "0.5px"),
+                    ("font-size", "0.8rem"),
+                    ("border-bottom", f"2px solid {THEME_GREEN}"),
+                    ("padding", "10px 12px"),
+                ],
+            },
+            {
+                "selector": "td",
+                "props": [
+                    ("padding", "8px 12px"),
+                    ("border-bottom", f"1px solid {THEME_BORDER}"),
+                    ("font-size", "0.9rem"),
+                ],
+            },
+        ])
+    )
+
+    # Apply green gradient color scale to each balance column
+    balance_cols = balance_columns or [c for c in df.columns if c not in ("Period", "Years")]
+    for col in balance_cols:
+        if col in df.columns:
+            styler = styler.background_gradient(
+                cmap="Greens",
+                subset=[col],
+                vmin=df[col].min() if pd.api.types.is_numeric_dtype(df[col]) else None,
+            )
+
+    return styler
 
 
 def build_growth_series(
@@ -616,16 +674,22 @@ def render_results(
                 )
                 combined_row[col_name] = format_money_value(balance, money_currency_symbol, money_currency_code)
             combined_rows.append(combined_row)
-        st.dataframe(combined_rows, use_container_width=True, hide_index=True)
+        st.dataframe(
+            style_summary_dataframe(combined_rows, balance_columns=[]),
+            use_container_width=True,
+            hide_index=True,
+        )
     else:
         money_balance_column = f"Balance ({money_currency_symbol})"
+        numeric_rows = []
         for money_row in money_summary_rows:
-            money_row[money_balance_column] = format_money_value(
-                float(money_row.pop("Balance ($)")),
-                money_currency_symbol,
-                money_currency_code,
-            )
-        st.dataframe(money_summary_rows, use_container_width=True, hide_index=True)
+            money_row[money_balance_column] = float(money_row.pop("Balance ($)"))
+            numeric_rows.append(money_row)
+        st.dataframe(
+            style_summary_dataframe(numeric_rows, balance_columns=[money_balance_column]),
+            use_container_width=True,
+            hide_index=True,
+        )
 
 
 def main() -> None:
