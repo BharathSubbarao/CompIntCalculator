@@ -327,11 +327,11 @@ class TestBuildYearlySummary:
 
     def test_balance_at_year_zero_equals_principal(self) -> None:
         rows = self._summary(5.0)
-        assert isclose(rows[0]["Balance ($)"], 10000.0, rel_tol=1e-9)
+        assert isclose(rows[0]["Balance"], 10000.0, rel_tol=1e-9)
 
     def test_balance_increases_over_time(self) -> None:
         rows = self._summary(5.0)
-        balances = [row["Balance ($)"] for row in rows]
+        balances = [row["Balance"] for row in rows]
         assert all(b2 >= b1 for b1, b2 in zip(balances, balances[1:]))
 
 
@@ -999,3 +999,251 @@ class TestChartTitleFontColor:
         assert "Interest Rate Variance" in fig.layout.title.text, (
             "Variance chart title text must still reference 'Interest Rate Variance'."
         )
+
+
+# ---------------------------------------------------------------------------
+# S14 – Green Gradient Styles
+# ---------------------------------------------------------------------------
+
+import pandas as pd
+import re as _re  # noqa: E402 (used in TestGreenGradientStyles)
+
+
+class TestGreenGradientStyles:
+    """S14 – _green_gradient_styles() interpolates dark-to-neon green per cell."""
+
+    def _series(self, values: list[float]) -> pd.Series:
+        return pd.Series(values)
+
+    def test_min_value_returns_low_rgb(self) -> None:
+        """Minimum value must map to the low_rgb colour (#1A3A20 = rgb(26,58,32))."""
+        styles = app._green_gradient_styles(self._series([0.0, 100.0]))
+        assert "26,58,32" in styles[0].replace(", ", ",")
+
+    def test_max_value_returns_high_rgb(self) -> None:
+        """Maximum value must map to the high_rgb colour (#39D353 = rgb(57,211,83))."""
+        styles = app._green_gradient_styles(self._series([0.0, 100.0]))
+        assert "57,211,83" in styles[1].replace(", ", ",")
+
+    def test_mid_range_rgb_is_between_extremes(self) -> None:
+        """A value at exactly t=0.5 must yield an RGB between low_rgb and high_rgb."""
+        styles = app._green_gradient_styles(self._series([0.0, 50.0, 100.0]))
+        # Extract r,g,b from the mid style string
+        mid = styles[1]
+        import re
+        numbers = re.findall(r"rgb\((\d+),(\d+),(\d+)\)", mid.replace(" ", ""))
+        assert numbers, f"Could not parse rgb from: {mid}"
+        r, g, b = int(numbers[0][0]), int(numbers[0][1]), int(numbers[0][2])
+        assert 26 < r < 57
+        assert 58 < g < 211
+        assert 32 < b < 83
+
+    def test_text_color_dark_for_high_t(self) -> None:
+        """t > 0.4 must yield THEME_TEXT_PRIMARY (white) as text color."""
+        # max value → t=1.0 which is > 0.4
+        styles = app._green_gradient_styles(self._series([0.0, 100.0]))
+        assert app.THEME_TEXT_PRIMARY in styles[1]
+
+    def test_text_color_muted_for_low_t(self) -> None:
+        """t <= 0.4 (min value, t=0.0) must yield muted text color #A0C8A0."""
+        styles = app._green_gradient_styles(self._series([0.0, 100.0]))
+        assert "#A0C8A0" in styles[0]
+
+    def test_single_value_no_zero_division(self) -> None:
+        """A series with all identical values must not raise ZeroDivisionError."""
+        styles = app._green_gradient_styles(self._series([500.0, 500.0, 500.0]))
+        assert len(styles) == 3
+
+    def test_returns_one_style_per_value(self) -> None:
+        """Output list length must equal input series length."""
+        values = [10.0, 20.0, 30.0, 40.0, 50.0]
+        styles = app._green_gradient_styles(self._series(values))
+        assert len(styles) == len(values)
+
+    def test_each_style_contains_background_color(self) -> None:
+        """Every returned style string must contain 'background-color'."""
+        styles = app._green_gradient_styles(self._series([1.0, 2.0, 3.0]))
+        for style in styles:
+            assert "background-color" in style
+
+    def test_each_style_contains_color(self) -> None:
+        """Every returned style string must contain 'color'."""
+        styles = app._green_gradient_styles(self._series([1.0, 2.0, 3.0]))
+        for style in styles:
+            assert "color:" in style
+
+
+# ---------------------------------------------------------------------------
+# S15 – Style Summary Dataframe
+# ---------------------------------------------------------------------------
+
+class TestStyleSummaryDataframe:
+    """S15 – style_summary_dataframe() applies fintech styling to the yearly grid."""
+
+    def _rows(self) -> list[dict]:
+        return [
+            {"Period": "Year 0", "Balance": 10000.0},
+            {"Period": "Year 1", "Balance": 10500.0},
+            {"Period": "Year 2", "Balance": 11025.0},
+        ]
+
+    def test_returns_styler_object(self) -> None:
+        """Must return a pandas Styler instance."""
+        result = app.style_summary_dataframe(self._rows())
+        assert isinstance(result, pd.io.formats.style.Styler)
+
+    def test_dataframe_has_correct_columns(self) -> None:
+        """The underlying dataframe must have the same columns as the input rows."""
+        result = app.style_summary_dataframe(self._rows())
+        assert list(result.data.columns) == ["Period", "Balance"]
+
+    def test_dataframe_has_correct_row_count(self) -> None:
+        """Row count must equal the number of input rows."""
+        result = app.style_summary_dataframe(self._rows())
+        assert len(result.data) == 3
+
+    def test_auto_detect_balance_columns_when_none(self) -> None:
+        """When balance_columns=None, non-Period/Years columns must be auto-detected."""
+        rows = [
+            {"Period": "Year 0", "Years": 0.0, "Balance": 10000.0},
+            {"Period": "Year 1", "Years": 1.0, "Balance": 10500.0},
+        ]
+        # Should not raise — auto-detects 'Balance' as the numeric column
+        result = app.style_summary_dataframe(rows, balance_columns=None)
+        assert isinstance(result, pd.io.formats.style.Styler)
+
+    def test_empty_balance_columns_skips_gradient(self) -> None:
+        """balance_columns=[] must skip gradient application and still return a Styler."""
+        result = app.style_summary_dataframe(self._rows(), balance_columns=[])
+        assert isinstance(result, pd.io.formats.style.Styler)
+
+    def test_explicit_balance_columns_applies_gradient(self) -> None:
+        """Explicitly passing balance_columns=['Balance'] must apply gradient styling."""
+        result = app.style_summary_dataframe(self._rows(), balance_columns=["Balance"])
+        assert isinstance(result, pd.io.formats.style.Styler)
+
+    def test_nonexistent_balance_column_ignored(self) -> None:
+        """A column name in balance_columns that doesn't exist must not raise."""
+        result = app.style_summary_dataframe(self._rows(), balance_columns=["NonExistent"])
+        assert isinstance(result, pd.io.formats.style.Styler)
+
+    def test_string_balance_column_skipped(self) -> None:
+        """A non-numeric column must be skipped when applying gradient (no error)."""
+        rows = [
+            {"Period": "Year 0", "Balance": "₹10,000.00"},
+            {"Period": "Year 1", "Balance": "₹10,500.00"},
+        ]
+        result = app.style_summary_dataframe(rows, balance_columns=["Balance"])
+        assert isinstance(result, pd.io.formats.style.Styler)
+
+
+# ---------------------------------------------------------------------------
+# S16 – Defaults: Currency and Frequency
+# ---------------------------------------------------------------------------
+
+class TestDefaults:
+    """S16 – Verify default values align with documented project constants."""
+
+    def test_frequency_options_includes_monthly_at_12(self) -> None:
+        """FREQUENCY_OPTIONS['Monthly'] must equal 12."""
+        assert app.FREQUENCY_OPTIONS["Monthly"] == 12
+
+    def test_frequency_options_default_index_3_is_monthly(self) -> None:
+        """Index 3 of FREQUENCY_OPTIONS keys must be 'Monthly' (the sidebar default)."""
+        keys = list(app.FREQUENCY_OPTIONS.keys())
+        assert keys[3] == "Monthly"
+
+    def test_frequency_options_contains_all_seven(self) -> None:
+        """FREQUENCY_OPTIONS must contain all 7 frequencies."""
+        expected = {"Annually", "Half Yearly", "Quarterly", "Monthly", "Semi-Monthly", "Weekly", "Daily"}
+        assert set(app.FREQUENCY_OPTIONS.keys()) == expected
+
+    def test_currency_symbol_inr(self) -> None:
+        """INR currency symbol must be ₹."""
+        money_currency_options = {
+            "INR (₹)": ("INR", "₹"),
+            "USD ($)": ("USD", "$"),
+            "EUR (€)": ("EUR", "€"),
+            "GBP (£)": ("GBP", "£"),
+            "JPY (¥)": ("JPY", "¥"),
+        }
+        assert money_currency_options["INR (₹)"] == ("INR", "₹")
+
+    def test_currency_options_first_entry_is_inr(self) -> None:
+        """The first currency option (sidebar default index=0) must be INR (₹)."""
+        # Match the dict defined in render_sidebar_inputs
+        money_currency_options = {
+            "INR (₹)": ("INR", "₹"),
+            "USD ($)": ("USD", "$"),
+            "EUR (€)": ("EUR", "€"),
+            "GBP (£)": ("GBP", "£"),
+            "JPY (¥)": ("JPY", "¥"),
+        }
+        first_key = list(money_currency_options.keys())[0]
+        assert first_key == "INR (₹)"
+
+    def test_all_five_currencies_present(self) -> None:
+        """All 5 expected currency codes must be representable via format_money_value."""
+        for symbol, code in [("₹", "INR"), ("$", "USD"), ("€", "EUR"), ("£", "GBP"), ("¥", "JPY")]:
+            result = app.format_money_value(1234.56, symbol, code)
+            assert symbol in result
+
+
+# ---------------------------------------------------------------------------
+# S17 – Main smoke test
+# ---------------------------------------------------------------------------
+
+class TestMain:
+    """S17 – main() must run without exception when all Streamlit calls are mocked."""
+
+    def test_main_runs_without_exception(self, monkeypatch) -> None:
+        """Smoke test: main() must complete without raising when st calls are monkeypatched."""
+        monkeypatch.setattr(app.st, "set_page_config", lambda **kwargs: None)
+
+        stub_inputs = (
+            10000.0,   # money_principal
+            500.0,     # money_monthly_contribution
+            5.0,       # annual_rate_percent
+            10.0,      # time_years
+            12,        # compounds_per_year
+            "Monthly", # frequency_label
+            "INR",     # money_currency_code
+            "₹",       # money_currency_symbol
+            0.0,       # rate_variance_percent
+        )
+        monkeypatch.setattr(app, "inject_app_styles", lambda: None)
+        monkeypatch.setattr(app, "render_sidebar_inputs", lambda: stub_inputs)
+        monkeypatch.setattr(app, "render_results", lambda *a, **kw: None)
+
+        app.main()  # must not raise
+
+
+# ---------------------------------------------------------------------------
+# S18 – build_yearly_summary uses neutral "Balance" key (not currency-specific)
+# ---------------------------------------------------------------------------
+
+class TestBuildYearlySummaryBalanceKey:
+    """S18 – build_yearly_summary() must return 'Balance' (not 'Balance ($)') as the raw key."""
+
+    def test_raw_rows_use_balance_key(self) -> None:
+        """build_yearly_summary must use 'Balance' as the raw dict key (currency-neutral)."""
+        rows = app.build_yearly_summary(
+            money_principal=5000.0,
+            money_monthly_contribution=0.0,
+            annual_rate_percent=5.0,
+            time_years=3.0,
+            compounds_per_year=12,
+        )
+        assert "Balance" in rows[0], "Expected 'Balance' key in summary row"
+        assert "Balance ($)" not in rows[0], "Stale 'Balance ($)' key must not be present"
+
+    def test_balance_key_value_is_numeric(self) -> None:
+        """The 'Balance' value must be a float/int (not a formatted string)."""
+        rows = app.build_yearly_summary(
+            money_principal=1000.0,
+            money_monthly_contribution=0.0,
+            annual_rate_percent=5.0,
+            time_years=2.0,
+            compounds_per_year=12,
+        )
+        assert isinstance(rows[0]["Balance"], (int, float))

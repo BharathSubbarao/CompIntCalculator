@@ -28,6 +28,20 @@ test.describe("UI Regression Positive - Currency and Labels", () => {
     await expect(
       page.getByTestId("stPlotlyChart").getByText("Balance (€)", { exact: true })
     ).toBeVisible();
+
+    await selectCurrency(page, "GBP (£)");
+    await expect(page.getByText("Principal Amount (£)")).toBeVisible();
+    await expect(page.getByText("Monthly Contribution (£)")).toBeVisible();
+    await expect(
+      page.getByTestId("stPlotlyChart").getByText("Balance (£)", { exact: true })
+    ).toBeVisible();
+
+    await selectCurrency(page, "JPY (¥)");
+    await expect(page.getByText("Principal Amount (¥)")).toBeVisible();
+    await expect(page.getByText("Monthly Contribution (¥)")).toBeVisible();
+    await expect(
+      page.getByTestId("stPlotlyChart").getByText("Balance (¥)", { exact: true })
+    ).toBeVisible();
   });
 
   test("metric values display currency symbols", async ({ page }) => {
@@ -35,5 +49,12 @@ test.describe("UI Regression Positive - Currency and Labels", () => {
 
     await selectCurrency(page, "GBP (£)");
     await expect(page.locator("[data-testid='stMetricValue']").first()).toContainText("£");
+  });
+
+  test("JPY currency symbol appears in metric values", async ({ page }) => {
+    await page.goto("/");
+
+    await selectCurrency(page, "JPY (¥)");
+    await expect(page.locator("[data-testid='stMetricValue']").first()).toContainText("¥");
   });
 });

@@ -369,7 +369,7 @@ def build_yearly_summary(
             {
                 "Period": period_label,
                 "Years": year_value,
-                "Balance ($)": round(money_balance, 2),
+                "Balance": round(money_balance, 2),
             }
         )
 
@@ -717,7 +717,7 @@ def render_results(
             display_rows.append({
                 "Period": money_row["Period"],
                 money_balance_column: format_money_value(
-                    float(money_row["Balance ($)"]),
+                    float(money_row["Balance"]),
                     money_currency_symbol,
                     money_currency_code,
                 ),
