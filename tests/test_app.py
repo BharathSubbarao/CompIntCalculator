@@ -937,3 +937,146 @@ class TestInjectAppStylesNumberInputButtons:
         monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
         app.inject_app_styles()
         assert "visibility: visible !important" in captured[0]
+
+
+# ---------------------------------------------------------------------------
+# S13 – Parallel Testing Infrastructure (Issue #31)
+# ---------------------------------------------------------------------------
+
+import os
+import subprocess
+
+
+class TestParallelTestingScript:
+    """S13 – run_parallel_testing.sh exists and enforces true OS-level parallelism (Issue #31).
+
+    Steps 3 (unit tester) and Step 4 (UI tester) must be launched as independent
+    background processes so they run simultaneously, not sequentially.
+    """
+
+    SCRIPT_PATH = os.path.join(
+        os.path.dirname(__file__), "..", "scripts", "run_parallel_testing.sh"
+    )
+
+    def test_run_parallel_testing_script_exists(self) -> None:
+        """Issue #31: scripts/run_parallel_testing.sh must exist."""
+        assert os.path.isfile(self.SCRIPT_PATH), (
+            "run_parallel_testing.sh not found — Issue #31 fix requires this script."
+        )
+
+    def test_run_parallel_testing_script_is_executable(self) -> None:
+        """Issue #31: run_parallel_testing.sh must start with a shebang (#!)."""
+        with open(self.SCRIPT_PATH) as fh:
+            content = fh.read()
+        assert content.startswith("#!/"), (
+            "run_parallel_testing.sh must start with a shebang (#!)."
+        )
+
+    def test_run_parallel_testing_script_launches_unit_tests_in_background(self) -> None:
+        """Issue #31: script must launch unit tests as a background process (trailing &)."""
+        with open(self.SCRIPT_PATH) as fh:
+            content = fh.read()
+        assert "run_unit_tests" in content, (
+            "run_parallel_testing.sh must define a run_unit_tests function."
+        )
+        assert "UNIT_PID=$!" in content, (
+            "run_parallel_testing.sh must capture unit test background PID with UNIT_PID=$!"
+        )
+
+    def test_run_parallel_testing_script_launches_ui_tests_in_background(self) -> None:
+        """Issue #31: script must launch UI tests as a background process (trailing &)."""
+        with open(self.SCRIPT_PATH) as fh:
+            content = fh.read()
+        assert "run_ui_tests" in content, (
+            "run_parallel_testing.sh must define a run_ui_tests function."
+        )
+        assert "UI_PID=$!" in content, (
+            "run_parallel_testing.sh must capture UI test background PID with UI_PID=$!"
+        )
+
+    def test_run_parallel_testing_script_waits_for_both_pids(self) -> None:
+        """Issue #31: script must wait for BOTH background PIDs before exiting."""
+        with open(self.SCRIPT_PATH) as fh:
+            content = fh.read()
+        assert 'wait "${UNIT_PID}"' in content, (
+            'run_parallel_testing.sh must call: wait "${UNIT_PID}" to collect unit test exit code.'
+        )
+        assert 'wait "${UI_PID}"' in content, (
+            'run_parallel_testing.sh must call: wait "${UI_PID}" to collect UI test exit code.'
+        )
+
+    def test_run_parallel_testing_script_collects_both_exit_codes(self) -> None:
+        """Issue #31: script must capture exit codes from BOTH background processes."""
+        with open(self.SCRIPT_PATH) as fh:
+            content = fh.read()
+        assert "UNIT_EXIT=$?" in content, (
+            "run_parallel_testing.sh must capture unit test exit code as UNIT_EXIT."
+        )
+        assert "UI_EXIT=$?" in content, (
+            "run_parallel_testing.sh must capture UI test exit code as UI_EXIT."
+        )
+
+    def test_run_parallel_testing_script_exits_zero_only_when_both_pass(self) -> None:
+        """Issue #31: script exits 0 only when both Step 3 and Step 4 succeed."""
+        with open(self.SCRIPT_PATH) as fh:
+            content = fh.read()
+        assert "UNIT_EXIT" in content and "UI_EXIT" in content, (
+            "run_parallel_testing.sh must check both UNIT_EXIT and UI_EXIT before exiting."
+        )
+        assert "exit 0" in content, (
+            "run_parallel_testing.sh must exit 0 when both steps complete successfully."
+        )
+        assert "exit 1" in content, (
+            "run_parallel_testing.sh must exit 1 when one or both steps are blocked."
+        )
+
+    def test_run_parallel_testing_script_requires_workflow_id_argument(self) -> None:
+        """Issue #31: script must fail with a non-zero exit when called without a workflow_id."""
+        result = subprocess.run(
+            ["bash", self.SCRIPT_PATH],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode != 0, (
+            "run_parallel_testing.sh must exit non-zero when workflow_id argument is missing."
+        )
+
+    def test_run_parallel_testing_script_accepts_workflow_id_parameter(self) -> None:
+        """Issue #31: script must accept a workflow_id as its first positional argument."""
+        with open(self.SCRIPT_PATH) as fh:
+            content = fh.read()
+        assert 'WORKFLOW_ID="${1' in content, (
+            "run_parallel_testing.sh must assign WORKFLOW_ID from the first argument ($1)."
+        )
+
+    def test_orchestrator_agent_references_parallel_script(self) -> None:
+        """Issue #31: orchestrator.agent.md must reference run_parallel_testing.sh."""
+        agent_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            ".github",
+            "agents",
+            "orchestrator.agent.md",
+        )
+        assert os.path.isfile(agent_path), "orchestrator.agent.md must exist."
+        with open(agent_path) as fh:
+            content = fh.read()
+        assert "run_parallel_testing.sh" in content, (
+            "orchestrator.agent.md must reference run_parallel_testing.sh so the "
+            "orchestrator launches Steps 3 + 4 via the parallel script."
+        )
+
+    def test_orchestrator_agent_describes_steps_as_background_processes(self) -> None:
+        """Issue #31: orchestrator.agent.md must describe Steps 3+4 as background processes."""
+        agent_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            ".github",
+            "agents",
+            "orchestrator.agent.md",
+        )
+        with open(agent_path) as fh:
+            content = fh.read()
+        assert "background" in content.lower() or "parallel" in content.lower(), (
+            "orchestrator.agent.md must describe Steps 3+4 as running in parallel / background."
+        )
