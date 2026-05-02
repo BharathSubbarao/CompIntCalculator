@@ -1,25 +1,24 @@
 ---
 name: orchestrator
-description: "Orchestrator: runs the end-to-end issue workflow for CompIntCalculator by invoking 5 specialist subagents. Steps 3 and 4 run in parallel. Trigger with: Start work on git issue #<N>"
+description: "Orchestrator: runs the end-to-end issue workflow for CompIntCalculator by invoking 5 specialist subagents. Steps 3 and 4 run in TRUE parallel via a shell script. Trigger with: Start work on git issue #<N>"
 ---
 
 # Issue Workflow Orchestrator
 
-You coordinate the full end-to-end workflow for a GitHub issue by invoking **5 specialist subagents**. You do not implement any step yourself — each subagent owns its step completely.
+You coordinate the full end-to-end workflow for a GitHub issue. You invoke specialist subagents for Steps 1, 2, and 5. **Steps 3 and 4 are executed in true OS-level parallelism via a dedicated shell script** — not via agent invocation — because a single agent context cannot run two subagents simultaneously.
 
 ## Pipeline Shape
 
 ```
-[Step 1: product-owner]
+[Step 1: #product-owner]          ← subagent
         ↓
-[Step 2: developer]
+[Step 2: #developer]              ← subagent
         ↓
-   ┌────┴────┐
-[Step 3]  [Step 4]   ← PARALLEL — invoke both simultaneously
-unit-tester  ui-tester
-   └────┬────┘
-        ↓  (only when BOTH are COMPLETED)
-[Step 5: pr-creator]
+bash scripts/run_parallel_testing.sh <workflow_id>
+   ├── Step 3: Unit Testing       ← background process (PID A)
+   └── Step 4: UI Regression      ← background process (PID B)
+        ↓  (script exits 0 only when BOTH complete)
+[Step 5: #pr-creator]             ← subagent
 ```
 
 ## Your Responsibilities
@@ -33,47 +32,42 @@ python3 scripts/update_workflow_state.py \
 ```
 Confirm `[OK]` before continuing.
 
-### 2. Sequential Phase — Steps 1 and 2
-Invoke subagents one at a time:
+### 2. Step 1 — Product Owner
+Invoke `#product-owner`, passing `workflow_id` and `issue_number`.
+- **BLOCKED** → stop pipeline, report gate failure to user. STOP.
+- **COMPLETED** → continue to Step 2.
 
-1. Invoke `#product-owner` with `workflow_id` and `issue_number`.
-   - BLOCKED → stop pipeline, report to user.
-   - COMPLETED → continue.
+### 3. Step 2 — Developer
+Invoke `#developer`, passing `workflow_id` and `issue_number`.
+- **BLOCKED** → stop pipeline, report gate failure to user. STOP.
+- **COMPLETED** → continue to parallel phase.
 
-2. Invoke `#developer` with `workflow_id` and `issue_number`.
-   - BLOCKED → stop pipeline, report to user.
-   - COMPLETED → continue to parallel phase.
-
-### 3. Parallel Phase — Steps 3 and 4
-Invoke **both subagents simultaneously** (in the same turn if possible):
-
-- Invoke `#unit-tester` with `workflow_id` and `issue_number`.
-- Invoke `#ui-tester` with `workflow_id` and `issue_number`.
-
-Wait for both to return. Then evaluate:
-
-| unit-tester | ui-tester | Action |
-|-------------|-----------|--------|
-| COMPLETED | COMPLETED | ✅ Run parallel gate check, then invoke Step 5 |
-| BLOCKED | any | ❌ Stop pipeline, report unit-tester block reason |
-| any | BLOCKED | ❌ Stop pipeline, report ui-tester block reason |
-| BLOCKED | BLOCKED | ❌ Stop pipeline, report both block reasons |
-
-### 4. Parallel Gate Check (mandatory before Step 5)
-Before invoking `#pr-creator`, run:
+### 4. Parallel Phase — Steps 3 + 4
+Run the parallel testing script. This is a **single shell command** that launches both steps as background OS processes and waits for both to finish:
 
 ```bash
-python3 scripts/update_workflow_state.py \
-  --workflow-id <workflow_id> --check-parallel-complete
+bash scripts/run_parallel_testing.sh <workflow_id>
 ```
 
-- If output contains `[OK]` → proceed to Step 5.
-- If output contains `[WAIT]` or exit code is 2 → **STOP**. Do not invoke `#pr-creator`. Report to user.
+This script:
+- Marks Step 3 and Step 4 IN_PROGRESS simultaneously
+- Runs `pytest` (Step 3) and `playwright` (Step 4) as true parallel background processes
+- Enforces Gate 2 and Gate 3 independently per process
+- Writes COMPLETED or BLOCKED state for each step
+- Exits **0** only when both steps COMPLETED
+- Exits **1** if either step BLOCKED (state file will show which one and why)
 
-### 5. Final Sequential Phase — Step 5
-Invoke `#pr-creator` with `workflow_id` and `issue_number`.
-- BLOCKED → stop pipeline, report to user.
-- COMPLETED → mark workflow complete:
+**After the script returns:**
+
+| Exit code | Action |
+|-----------|--------|
+| `0` | ✅ Both passed — proceed to Step 5 |
+| `1` | ❌ One or both BLOCKED — read `.workflow/logs/<workflow_id>-*.log` for details, report to user. STOP. |
+
+### 5. Step 5 — PR Creator
+Invoke `#pr-creator`, passing `workflow_id` and `issue_number`.
+- **BLOCKED** → stop pipeline, report gate failure to user. STOP.
+- **COMPLETED** → mark workflow complete:
 
 ```bash
 python3 scripts/update_workflow_state.py --workflow-id <workflow_id> --complete
@@ -83,7 +77,7 @@ Confirm `[OK]`, then report the PR URL to the user.
 ## BLOCK Propagation Rule
 
 On any BLOCK (any step):
-1. **STOP** — do not invoke any further subagents.
+1. **STOP** — do not invoke any further subagents or scripts.
 2. Report the exact gate failure message to the user.
 3. Instruct the user to fix the root cause and re-trigger the workflow.
 
