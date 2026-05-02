@@ -883,3 +883,57 @@ class TestAxisBankChartColors:
             assert r in fill and g in fill and b in fill, (
                 f"Entry {i} fill '{fill}' does not match expected RGB({r},{g},{b})"
             )
+
+
+# ---------------------------------------------------------------------------
+# S12 – inject_app_styles() always-visible number input step buttons (Issue #29)
+# ---------------------------------------------------------------------------
+
+class TestInjectAppStylesNumberInputButtons:
+    """S12 – inject_app_styles() must include CSS that keeps +/- step buttons always visible."""
+
+    def test_inject_app_styles_is_callable(self) -> None:
+        """inject_app_styles must exist in app module and be callable."""
+        assert callable(app.inject_app_styles)
+
+    def test_inject_app_styles_calls_st_markdown_once(self, monkeypatch) -> None:
+        """inject_app_styles must call st.markdown exactly once."""
+        calls: list = []
+        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: calls.append((text, kwargs)))
+        app.inject_app_styles()
+        assert len(calls) == 1
+
+    def test_inject_app_styles_passes_unsafe_allow_html(self, monkeypatch) -> None:
+        """inject_app_styles must pass unsafe_allow_html=True to st.markdown."""
+        captured: list = []
+        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(kwargs))
+        app.inject_app_styles()
+        assert captured[0].get("unsafe_allow_html") is True
+
+    def test_step_up_button_selector_always_visible(self, monkeypatch) -> None:
+        """Injected CSS must include stNumberInputStepUp selector for always-visible +/- buttons."""
+        captured: list = []
+        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+        app.inject_app_styles()
+        assert "stNumberInputStepUp" in captured[0]
+
+    def test_step_down_button_selector_always_visible(self, monkeypatch) -> None:
+        """Injected CSS must include stNumberInputStepDown selector for always-visible +/- buttons."""
+        captured: list = []
+        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+        app.inject_app_styles()
+        assert "stNumberInputStepDown" in captured[0]
+
+    def test_step_buttons_css_opacity_one(self, monkeypatch) -> None:
+        """Injected CSS must set opacity: 1 !important on the number input step buttons."""
+        captured: list = []
+        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+        app.inject_app_styles()
+        assert "opacity: 1 !important" in captured[0]
+
+    def test_step_buttons_css_visibility_visible(self, monkeypatch) -> None:
+        """Injected CSS must set visibility: visible !important on the number input step buttons."""
+        captured: list = []
+        monkeypatch.setattr(app.st, "markdown", lambda text, **kwargs: captured.append(text))
+        app.inject_app_styles()
+        assert "visibility: visible !important" in captured[0]
