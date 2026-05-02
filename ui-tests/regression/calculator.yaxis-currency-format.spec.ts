@@ -29,8 +29,9 @@ test('Currency selector is visible and defaults to INR (₹)', async ({ page }) 
   const currencySelect = page.getByLabel('Currency');
   await expect(currencySelect).toBeVisible();
 
-  // The selected value should contain "INR"
-  await expect(currencySelect).toContainText('INR');
+  // Verify INR is selected by default: the dynamic label for the principal input
+  // changes to include the currency symbol — "Principal Amount (₹)" confirms INR.
+  await expect(page.getByText('Principal Amount (₹)')).toBeVisible({ timeout: 10000 });
 });
 
 test('Currency dropdown lists all expected options', async ({ page }) => {
@@ -39,11 +40,14 @@ test('Currency dropdown lists all expected options', async ({ page }) => {
   const currencySelect = page.getByLabel('Currency');
   await currencySelect.click();
 
-  await expect(page.getByText('INR (₹)')).toBeVisible();
-  await expect(page.getByText('USD ($)')).toBeVisible();
-  await expect(page.getByText('EUR (€)')).toBeVisible();
-  await expect(page.getByText('GBP (£)')).toBeVisible();
-  await expect(page.getByText('JPY (¥)')).toBeVisible();
+  // Scope checks to the virtual dropdown to avoid strict-mode violations
+  // (the sidebar also shows the currently-selected value text alongside the open dropdown)
+  const dropdown = page.getByTestId('stSelectboxVirtualDropdown');
+  await expect(dropdown.getByText('INR (₹)')).toBeVisible();
+  await expect(dropdown.getByText('USD ($)')).toBeVisible();
+  await expect(dropdown.getByText('EUR (€)')).toBeVisible();
+  await expect(dropdown.getByText('GBP (£)')).toBeVisible();
+  await expect(dropdown.getByText('JPY (¥)')).toBeVisible();
 });
 
 test('INR with crore-range principal shows "Cr" labels on Y-axis', async ({ page }) => {
