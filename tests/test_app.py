@@ -1202,8 +1202,8 @@ class TestDefaults:
         assert keys[3] == "Monthly"
 
     def test_frequency_options_contains_all_seven(self) -> None:
-        """FREQUENCY_OPTIONS must contain all 7 frequencies."""
-        expected = {"Annually", "Half Yearly", "Quarterly", "Monthly", "Semi-Monthly", "Weekly", "Daily"}
+        """FREQUENCY_OPTIONS must contain all 8 frequencies (updated for Bi-Weekly — Issue #37)."""
+        expected = {"Annually", "Half Yearly", "Quarterly", "Monthly", "Semi-Monthly", "Bi-Weekly", "Weekly", "Daily"}
         assert set(app.FREQUENCY_OPTIONS.keys()) == expected
 
     def test_currency_symbol_inr(self) -> None:
